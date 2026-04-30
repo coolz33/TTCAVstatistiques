@@ -521,7 +521,7 @@ body.light-theme {
 .match-opponent {
     font-weight: 500;
     font-size: 0.9rem;
-    color: #edf2f7;
+    color: var(--text-main);
     margin-bottom: 0;
 }
 
@@ -1015,68 +1015,467 @@ body.light-theme {
     color: var(--text-main);
 }
 
-/* === BOUTON TOGGLE THÈME === */
-#themeToggleBtn {
-    background: var(--toggle-bg);
-    border: 1px solid var(--toggle-border);
-    color: var(--toggle-icon);
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
+/* === BOUTON TOGGLE THÈME - PILL PREMIUM === */
+.theme-toggle {
+    position: relative;
     display: inline-flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
+    width: 72px;
+    height: 34px;
+    padding: 0 8px;
+    background: #1a202c;
+    border: 1px solid #4a5568;
+    border-radius: 50px;
     cursor: pointer;
-    font-size: 1rem;
-    transition: all 0.3s ease;
+    gap: 0;
+    overflow: hidden;
     flex-shrink: 0;
+    transition: background 0.4s ease, border-color 0.4s ease;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
 }
 
-#themeToggleBtn:hover {
-    transform: rotate(20deg) scale(1.1);
-    border-color: var(--accent-yellow);
-    color: var(--accent-yellow);
+.theme-toggle-thumb {
+    position: absolute;
+    left: 4px;
+    width: 26px;
+    height: 26px;
+    background: var(--accent-yellow);
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(236,201,75,0.5);
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.4s ease, box-shadow 0.4s ease;
+    z-index: 1;
+    pointer-events: none;
 }
 
-/* Adaptations thème clair pour Bootstrap */
-body.light-theme .table-dark {
-    --bs-table-bg: var(--bg-card);
-    --bs-table-color: var(--text-main);
-    --bs-table-striped-bg: var(--bg-body);
-    --bs-table-hover-bg: var(--row-hover);
-    --bs-table-border-color: var(--border-color);
+.theme-icon-sun,
+.theme-icon-moon {
+    font-size: 0.72rem;
+    z-index: 2;
+    transition: color 0.3s ease, opacity 0.3s ease;
+    pointer-events: none;
+    line-height: 1;
 }
 
-body.light-theme .players-table thead th {
-    background: rgba(0, 0, 0, 0.06) !important;
-    color: var(--text-muted) !important;
-    border-bottom: 2px solid var(--border-color) !important;
+.theme-icon-sun {
+    color: #1a202c;
+    opacity: 1;
 }
 
+.theme-icon-moon {
+    color: var(--text-muted);
+    opacity: 0.4;
+}
+
+/* État THÈME CLAIR : thumb glisse à droite */
+body.light-theme .theme-toggle {
+    background: #bee3f8;
+    border-color: #90cdf4;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+}
+
+body.light-theme .theme-toggle-thumb {
+    transform: translateX(38px);
+    background: #3182ce;
+    box-shadow: 0 2px 8px rgba(49,130,206,0.5);
+}
+
+body.light-theme .theme-icon-sun {
+    color: var(--text-muted);
+    opacity: 0.4;
+}
+
+body.light-theme .theme-icon-moon {
+    color: #fff;
+    opacity: 1;
+}
+
+.theme-toggle:hover {
+    transform: scale(1.04);
+}
+
+/* === STYLES TABLE — SURCHARGE VARIABLES BOOTSTRAP === */
+
+/* Thème SOMBRE : forcer les variables Bootstrap et les couleurs */
+body.dark-theme .players-table {
+    --bs-table-bg: #2d3748;
+    --bs-table-color: #ffffff;
+    --bs-table-border-color: #4a5568;
+    --bs-table-hover-bg: rgba(255,255,255,0.05);
+    --bs-table-hover-color: #ffffff;
+    --bs-table-striped-bg: rgba(0,0,0,0.1);
+    background-color: #2d3748;
+    color: #ffffff;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+body.dark-theme .players-table tbody tr {
+    background-color: #2d3748 !important;
+    color: #ffffff;
+}
+
+body.dark-theme .players-table tbody tr:hover,
+body.dark-theme .player-row:hover {
+    background-color: rgba(255,255,255,0.04) !important;
+}
+
+body.dark-theme .players-table > :not(caption) > * > * {
+    background-color: #2d3748 !important;
+    color: #ffffff;
+    border-color: #4a5568;
+}
+
+body.dark-theme .player-row.expanded > * {
+    background-color: #252f3f !important;
+}
+
+/* Thème CLAIR : variables Bootstrap + styles */
+body.light-theme .players-table {
+    --bs-table-bg: #ffffff;
+    --bs-table-color: #1a202c;
+    --bs-table-border-color: #f0f4f8;
+    --bs-table-hover-bg: #ebf8ff;
+    --bs-table-hover-color: #1a202c;
+    background-color: #ffffff;
+    color: #1a202c;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+body.light-theme .players-table > :not(caption) > * > * {
+    background-color: #ffffff !important;
+    color: #1a202c;
+    border-color: #f0f4f8;
+}
+
+body.light-theme .players-table tbody tr:hover > *,
+body.light-theme .player-row:hover > * {
+    background-color: #ebf8ff !important;
+}
+
+body.light-theme .player-row.expanded > * {
+    background-color: #f0f4f8 !important;
+}
+
+/* ================================================================
+   THÈME CLAIR — REFONTE COMPLÈTE PREMIUM
+   Design SaaS moderne : fonds doux, ombres subtiles, contrastes nets
+   ================================================================ */
+
+/* --- Layout général --- */
+body.light-theme {
+    background: linear-gradient(160deg, #f0f4f8 0%, #e8eef5 100%);
+    min-height: 100vh;
+}
+
+body.light-theme h1 {
+    color: #1a202c;
+    text-shadow: none;
+}
+
+body.light-theme .subtitle,
+body.light-theme .lead {
+    color: #4a5568;
+}
+
+body.light-theme .stats-summary,
+body.light-theme #playerCount {
+    color: #4a5568;
+}
+
+/* --- Barre de recherche --- */
 body.light-theme .search-bar-container {
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06);
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
 }
 
-body.light-theme .table-responsive {
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07);
+body.light-theme .search-input-wrapper .search-icon {
+    color: #a0aec0;
 }
 
+body.light-theme .form-control {
+    background-color: #f7fafc !important;
+    border-color: #e2e8f0 !important;
+    color: #1a202c !important;
+}
+
+body.light-theme .form-control:focus {
+    background-color: #ffffff !important;
+    border-color: #3182ce !important;
+    box-shadow: 0 0 0 0.2rem rgba(49,130,206,0.15) !important;
+}
+
+body.light-theme .form-control::placeholder {
+    color: #a0aec0;
+}
+
+/* --- Boutons Bootstrap --- */
 body.light-theme .btn-outline-secondary {
     color: #4a5568;
     border-color: #cbd5e0;
+    background: #ffffff;
+}
+body.light-theme .btn-outline-secondary:hover {
+    background: #edf2f7;
+    border-color: #a0aec0;
+    color: #2d3748;
+}
+body.light-theme .btn-outline-secondary.active {
+    background: #2d3748;
+    border-color: #2d3748;
+    color: #ffffff;
+}
+
+body.light-theme .btn-outline-warning {
+    color: #b7791f;
+    border-color: #d69e2e;
+    background: #fffbeb;
+}
+body.light-theme .btn-outline-warning:hover {
+    background: #d69e2e;
+    color: #ffffff;
 }
 
 body.light-theme .btn-outline-light {
     color: #4a5568;
     border-color: #cbd5e0;
+    background: #ffffff;
+}
+body.light-theme .btn-outline-light:hover {
+    background: #edf2f7;
+    color: #1a202c;
 }
 
-body.light-theme .text-muted {
-    color: var(--text-muted) !important;
+/* --- Sélecteur de tri --- */
+body.light-theme .sort-selector-wrapper {
+    background: #f7fafc;
+    border-color: #e2e8f0;
+}
+body.light-theme .sort-selector-wrapper select {
+    color: #b7791f;
 }
 
+/* --- Table responsive container --- */
+body.light-theme .table-responsive {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+}
+
+/* --- Table thête --- */
+body.light-theme .players-table thead th {
+    background: #f7fafc !important;
+    color: #718096 !important;
+    border-bottom: 2px solid #e2e8f0 !important;
+    font-size: 0.72rem !important;
+}
+
+/* --- Lignes joueurs --- */
+body.light-theme .players-table tbody tr,
+body.light-theme .player-row {
+    background: #ffffff !important;
+    border-bottom: 1px solid #f0f4f8 !important;
+}
+
+body.light-theme .player-row:hover {
+    background: #ebf8ff !important;
+}
+
+body.light-theme .player-row.expanded {
+    background: #f0f4f8 !important;
+}
+
+/* --- Rang --- */
+body.light-theme .rank-number {
+    background: rgba(0,0,0,0.05);
+    color: #b7791f;
+    border-color: rgba(183,121,31,0.25);
+}
+body.light-theme .player-row:hover .rank-number {
+    background: #d69e2e;
+    color: #ffffff;
+    border-color: #d69e2e;
+}
+
+/* --- Avatar --- */
+body.light-theme .player-avatar {
+    background: #e2e8f0;
+    color: #4a5568;
+}
+
+/* --- Noms --- */
+body.light-theme .player-nom {
+    color: #1a202c;
+}
+body.light-theme .player-prenom {
+    color: #4a5568;
+}
+body.light-theme .player-licence {
+    color: #b7791f;
+}
+body.light-theme .refresh-icon-mini {
+    color: #b7791f;
+}
+
+/* --- Colonnes stats --- */
+body.light-theme .val-official {
+    color: #2b6cb0;
+}
+body.light-theme .val-monthly .main-val {
+    color: #b7791f;
+}
+body.light-theme .col-virtuel {
+    color: #b7791f !important;
+}
+body.light-theme .col-virtuel-big {
+    color: #b7791f !important;
+}
+body.light-theme .prog-highlight.plus {
+    color: #276749;
+}
+body.light-theme .prog-highlight.minus {
+    color: #9b2c2c;
+}
+body.light-theme .prog-val.plus {
+    color: #276749;
+}
+body.light-theme .prog-val.minus {
+    color: #9b2c2c;
+}
+
+/* --- Détails row --- */
+body.light-theme .details-row,
+body.light-theme .details-row td {
+    background: #f0f4f8 !important;
+}
+body.light-theme .details-content {
+    background: #f0f4f8;
+    border-bottom-color: #d69e2e;
+}
+body.light-theme .details-header h3 {
+    color: #b7791f;
+}
+body.light-theme .history-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+/* --- Bouton fermer détails --- */
+body.light-theme .btn-close-details {
+    background: #ffffff;
+    border-color: #e2e8f0;
+    color: #4a5568;
+}
+body.light-theme .btn-close-details:hover {
+    background: #1a202c;
+    color: #ffffff;
+    border-color: #1a202c;
+}
+
+/* --- Match cards --- */
+body.light-theme .match-date-group {
+    color: #b7791f;
+}
+body.light-theme .match-card {
+    background: #ffffff;
+    border: 1px solid #f0f4f8;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+body.light-theme .match-card:hover {
+    background: #f7fafc;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+    transform: translateX(5px);
+}
+body.light-theme .match-card.win {
+    border-left-color: #48bb78;
+}
+body.light-theme .match-card.loss {
+    border-left-color: #f56565;
+}
 body.light-theme .match-opponent {
-    color: #2d3748;
+    color: #1a202c;
+}
+body.light-theme .match-points-badge.win {
+    background: #38a169;
+}
+body.light-theme .match-points-badge.loss {
+    background: #e53e3e;
+}
+
+/* --- Set boxes --- */
+body.light-theme .set-top {
+    border-bottom-color: rgba(0,0,0,0.08);
+}
+body.light-theme .bg-dark.text-muted {
+    background-color: #edf2f7 !important;
+    color: #a0aec0 !important;
+}
+
+/* --- Badges --- */
+body.light-theme .badge-coef {
+    background: #d69e2e;
+    color: #ffffff;
+}
+body.light-theme .badge-virtual {
+    background: #d69e2e;
+    color: #ffffff;
+}
+body.light-theme .validation-separator.live {
+    background: rgba(221,107,32,0.1);
+    color: #c05621;
+    border-color: rgba(221,107,32,0.3);
+}
+body.light-theme .validation-separator.validated {
+    background: rgba(56,161,105,0.1);
+    color: #276749;
+    border-color: rgba(56,161,105,0.3);
+}
+
+/* --- Bootstrap utilitaires --- */
+body.light-theme .text-muted {
+    color: #718096 !important;
+}
+body.light-theme .text-warning {
+    color: #b7791f !important;
+}
+body.light-theme .text-light {
+    color: #4a5568 !important;
+}
+body.light-theme .text-danger {
+    color: #c53030 !important;
+}
+body.light-theme .small.text-muted {
+    color: #a0aec0 !important;
+}
+
+/* --- Badge progression --- */
+body.light-theme .prog-badge {
+    background: rgba(0,0,0,0.06);
+}
+
+/* --- Barre de progression sync --- */
+body.light-theme .progress {
+    background: rgba(0,0,0,0.07) !important;
+}
+body.light-theme #syncProgressContainer {
+    background: #ffffff;
+    border-color: #e2e8f0;
+}
+
+/* --- Boutons actions mobile --- */
+body.light-theme .btn-mobile-details {
+    background: #f0f4f8;
+    border-color: #e2e8f0;
+    color: #4a5568;
+}
+
+/* --- Avatar float preview --- */
+body.light-theme .avatar-float-preview {
+    background: #ffffff;
+    border-color: #d69e2e;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.25);
 }
 
 /* Smartphone Overrides */

@@ -64,8 +64,10 @@ $clubName = $club['nom'] ?? 'Club ' . $clubId;
                         <i class="fas fa-sync-alt"></i>
                     </button>
 
-                    <button id="themeToggleBtn" title="Basculer thème clair / sombre">
-                        <i class="fas fa-sun"></i>
+                    <button class="theme-toggle" id="themeToggleBtn" title="Passer en thème clair">
+                        <i class="fas fa-sun theme-icon-sun"></i>
+                        <span class="theme-toggle-thumb"></span>
+                        <i class="fas fa-moon theme-icon-moon"></i>
                     </button>
                 </div>
 
@@ -109,8 +111,10 @@ $clubName = $club['nom'] ?? 'Club ' . $clubId;
                     <button class="btn btn-outline-light btn-sm" onclick="location.href='loading.php?clubId=<?php echo $clubId; ?>'">
                         <i class="fas fa-sync-alt"></i>
                     </button>
-                    <button id="themeToggleBtnMobile" title="Thème" onclick="toggleTheme()" style="background:var(--toggle-bg);border:1px solid var(--toggle-border);color:var(--toggle-icon);width:32px;height:32px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.9rem;transition:all 0.3s;">
-                        <i class="fas fa-sun"></i>
+                    <button class="theme-toggle" id="themeToggleBtnMobile" title="Passer en thème clair">
+                        <i class="fas fa-sun theme-icon-sun"></i>
+                        <span class="theme-toggle-thumb"></span>
+                        <i class="fas fa-moon theme-icon-moon"></i>
                     </button>
                 </div>
             </div>
@@ -127,7 +131,7 @@ $clubName = $club['nom'] ?? 'Club ' . $clubId;
         </div>
 
         <div class="table-responsive">
-            <table class="players-table table table-dark table-hover mb-0">
+            <table class="players-table table table-hover mb-0">
                 <thead>
                     <tr>
                         <th class="col-rank pc-only-cell">#</th>

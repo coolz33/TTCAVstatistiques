@@ -31,9 +31,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    // Attacher le bouton toggle PC
-    const toggleBtn = document.getElementById('themeToggleBtn');
-    if (toggleBtn) toggleBtn.addEventListener('click', toggleTheme);
+    // Attacher les deux boutons toggle (aucun onclick dans le HTML)
+    document.querySelectorAll('#themeToggleBtn, #themeToggleBtnMobile').forEach(btn => {
+        if (btn) btn.addEventListener('click', toggleTheme);
+    });
 });
 
 /* ===== GESTION DU THÈME ===== */
@@ -54,18 +55,10 @@ function applyTheme(theme) {
     body.classList.remove('dark-theme', 'light-theme');
     body.classList.add(theme + '-theme');
 
-    const icon = theme === 'light' ? 'fa-moon' : 'fa-sun';
     const title = theme === 'light' ? 'Passer en thème sombre' : 'Passer en thème clair';
-
-    // Mettre à jour les deux boutons (PC + Mobile)
     ['themeToggleBtn', 'themeToggleBtnMobile'].forEach(id => {
         const btn = document.getElementById(id);
-        if (!btn) return;
-        const i = btn.querySelector('i');
-        if (i) {
-            i.className = 'fas ' + icon;
-        }
-        btn.title = title;
+        if (btn) btn.title = title;
     });
 }
 
