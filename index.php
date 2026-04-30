@@ -63,6 +63,10 @@ $clubName = $club['nom'] ?? 'Club ' . $clubId;
                     <button class="btn btn-outline-light btn-sm" onclick="location.href='loading.php?clubId=<?php echo $clubId; ?>'" title="Rafraîchir la page">
                         <i class="fas fa-sync-alt"></i>
                     </button>
+
+                    <button id="themeToggleBtn" title="Basculer thème clair / sombre">
+                        <i class="fas fa-sun"></i>
+                    </button>
                 </div>
 
                 <div class="col-md-auto text-center text-md-start">
@@ -98,12 +102,15 @@ $clubName = $club['nom'] ?? 'Club ' . $clubId;
                     </div>
                 </div>
 
-                <div class="d-flex gap-2">
+                <div class="d-flex gap-2 align-items-center">
                     <button class="btn btn-outline-warning btn-sm" id="btnSyncAllMobile">
                         <i class="fas fa-bolt me-1"></i> Sync
                     </button>
                     <button class="btn btn-outline-light btn-sm" onclick="location.href='loading.php?clubId=<?php echo $clubId; ?>'">
                         <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <button id="themeToggleBtnMobile" title="Thème" onclick="toggleTheme()" style="background:var(--toggle-bg);border:1px solid var(--toggle-border);color:var(--toggle-icon);width:32px;height:32px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.9rem;transition:all 0.3s;">
+                        <i class="fas fa-sun"></i>
                     </button>
                 </div>
             </div>

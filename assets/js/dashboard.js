@@ -3,6 +3,7 @@ let charts = {};
 let currentSort = JSON.parse(localStorage.getItem('ttcav_sort')) || { column: 6, direction: 'desc' };
 
 document.addEventListener('DOMContentLoaded', function() {
+    initTheme();
     initTableEvents();
     initSearch();
     initSyncAll();
@@ -30,7 +31,43 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    // Attacher le bouton toggle PC
+    const toggleBtn = document.getElementById('themeToggleBtn');
+    if (toggleBtn) toggleBtn.addEventListener('click', toggleTheme);
 });
+
+/* ===== GESTION DU THÈME ===== */
+function initTheme() {
+    const saved = localStorage.getItem('ttcav_theme') || 'dark';
+    applyTheme(saved);
+}
+
+function toggleTheme() {
+    const body = document.body;
+    const isDark = body.classList.contains('dark-theme');
+    applyTheme(isDark ? 'light' : 'dark');
+    localStorage.setItem('ttcav_theme', isDark ? 'light' : 'dark');
+}
+
+function applyTheme(theme) {
+    const body = document.body;
+    body.classList.remove('dark-theme', 'light-theme');
+    body.classList.add(theme + '-theme');
+
+    const icon = theme === 'light' ? 'fa-moon' : 'fa-sun';
+    const title = theme === 'light' ? 'Passer en thème sombre' : 'Passer en thème clair';
+
+    // Mettre à jour les deux boutons (PC + Mobile)
+    ['themeToggleBtn', 'themeToggleBtnMobile'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        const i = btn.querySelector('i');
+        if (i) {
+            i.className = 'fas ' + icon;
+        }
+        btn.title = title;
+    });
+}
 
 function saveState() {
     if (window._isRestoring) return;
