@@ -1,0 +1,19 @@
+# Cache API FFTT (fichiers volumineux et temporaires)
+cache/
+
+# Fichiers de debug
+debug.log
+debug_match.log
+
+# Scripts temporaires
+scratch/
+
+# Config local (contient les clés API)
+config.php
+
+# Dépendances
+vendor/
+
+# OS
+.DS_Store
+Thumbs.db
