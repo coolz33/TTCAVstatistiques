@@ -148,6 +148,7 @@ $isProvisionalPeriod = ($day >= 1 && $day <= 10);
                         </td>
                         <td class="col-main-content">
                             <div class="player-info">
+                                <div class="rank-number d-md-none me-1" style="min-width: 28px;"><?php echo ($rank - 1); ?></div>
                                 <div class="player-avatar avatar-md" 
                                      onclick="triggerAvatarUpload('<?php echo $p['licence']; ?>')"
                                      oncontextmenu="event.preventDefault(); event.stopPropagation(); const img = this.querySelector('img'); if(img) triggerAvatarRecenter(img, '<?php echo $p['licence']; ?>')">

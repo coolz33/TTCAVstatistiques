@@ -118,16 +118,29 @@ function initSearch() {
         
         const playerRows = document.querySelectorAll('.player-row');
         const playerCountSpan = document.getElementById('playerCount');
+        const playerCountMobileSpan = document.getElementById('playerCountMobile');
         let visibleCount = 0;
 
         playerRows.forEach(row => {
             const name = row.querySelector('.player-name').textContent.toLowerCase();
+            const prenom = row.querySelector('.player-prenom').textContent.toLowerCase();
             const licence = row.querySelector('.player-licence').textContent.toLowerCase();
             const detailsRow = document.getElementById('details-' + row.dataset.licence);
 
-            if (name.includes(term) || licence.includes(term)) {
+            if (name.includes(term) || prenom.includes(term) || licence.includes(term)) {
                 row.classList.remove('hidden');
-                row.cells[0].innerHTML = `<span class="rank-number">${++visibleCount}</span>`;
+                visibleCount++;
+                
+                // Mettre à jour le rang (Desktop)
+                if (row.cells[0]) {
+                    row.cells[0].innerHTML = `<span class="rank-number">${visibleCount}</span>`;
+                }
+                
+                // Mettre à jour le rang (Mobile)
+                const mobileRank = row.querySelector('.player-info .rank-number.d-md-none');
+                if (mobileRank) {
+                    mobileRank.textContent = visibleCount;
+                }
             } else {
                 row.classList.add('hidden');
                 if (detailsRow) detailsRow.classList.add('hidden-row');
@@ -135,6 +148,7 @@ function initSearch() {
         });
 
         if (playerCountSpan) playerCountSpan.textContent = visibleCount;
+        if (playerCountMobileSpan) playerCountMobileSpan.textContent = visibleCount;
         saveState(); // Sauvegarder après filtrage
     });
 
@@ -525,6 +539,7 @@ function loadMatches(licence) {
             const groupStats = {};
             let liveCount = 0;
             let validatedCount = 0;
+            let hasProvisionalGlobal = false;
 
             data.forEach(m => {
                 const dateStr = new Date(m.date_match).toLocaleDateString('fr-FR');
@@ -539,8 +554,13 @@ function loadMatches(licence) {
                 else groupStats[groupKey].lost += pts;
                 groupStats[groupKey].total += pts;
 
-                if (m.is_validated == 0) liveCount++;
-                else validatedCount++;
+                if (m.is_validated == 0) {
+                    liveCount++;
+                    const matchDate = new Date(m.date_match);
+                    if (matchDate.getDate() <= 10) hasProvisionalGlobal = true;
+                } else {
+                    validatedCount++;
+                }
             });
             
             let currentValidationState = null;
@@ -554,12 +574,11 @@ function loadMatches(licence) {
                 if (currentValidationState !== isLive) {
                     currentValidationState = isLive;
                     if (isLive) {
-                        const isProvisionalDay = (new Date().getDate() <= 10);
-                        if (isProvisionalDay) {
+                        if (hasProvisionalGlobal) {
                             html += `
-                            <div style="background: rgba(236, 201, 75, 0.1); border: 1px solid rgba(236, 201, 75, 0.3); color: #ecc94b; padding: 12px 15px; border-radius: 8px; margin-bottom: 15px; font-size: 0.85rem; line-height: 1.4;">
-                                <i class="fas fa-info-circle me-1"></i>
-                                <b>Note sur les points :</b> Durant la période du 01 au 10 du mois, vos points virtuels incluent les matchs du mois dernier car le classement officiel n'est pas encore publié. Ils seront recalculés automatiquement sur la base du nouveau classement FFTT dès sa parution (le 10 du mois).
+                            <div style="background: rgba(236, 201, 75, 0.1); border: 1px solid rgba(236, 201, 75, 0.3); color: #ecc94b; padding: 12px 15px; border-radius: 8px; margin-bottom: 15px; font-size: 0.8rem; line-height: 1.4;">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <b>Note sur les points :</b> Les matchs marqués avec le badge <span class="badge" style="background: #ed8936; font-size: 0.65rem; color: white;">PROVISOIRE</span> seront recalculés correctement le 11 du mois. Les points virtuels ne prennent pas encore en compte les matchs effectués avant le 10 du mois tant que le classement officiel n'est pas paru.
                             </div>`;
                         }
                         html += `<div class="validation-separator live">Matchs non validés (${liveCount})</div>`;
@@ -579,13 +598,16 @@ function loadMatches(licence) {
                     const totalSign = totalVal > 0 ? '+' : '';
                     const totalStr = `<span style="color: ${totalColor}; font-weight: bold;">${totalSign}${totalVal.toFixed(1)}</span>`;
                     
-                    html += `<div class="match-date-group">
-                                <div>
+                    html += `<div class="match-date-group d-flex align-items-center justify-content-between gap-2">
+                                <div style="flex-grow: 1; min-width: 0; line-height: 1.2;">
                                     <i class="far fa-calendar-alt me-1"></i> ${groupKey}
                                     <span class="badge-coef">COEFF x${coef}</span>
                                 </div>
-                                <div style="font-size: 0.85rem; background: rgba(0,0,0,0.2); padding: 2px 8px; border-radius: 4px;">
-                                    Bilan : ${wonStr} | ${lostStr} = ${totalStr}
+                                <div style="flex-shrink: 0; font-size: 0.75rem; background: rgba(0,0,0,0.15); padding: 4px 10px; border-radius: 8px; text-align: right; line-height: 1.3; border: 1px solid rgba(255,255,255,0.05); min-width: 95px;">
+                                    <div style="white-space: nowrap;">${wonStr} | ${lostStr}</div>
+                                    <div style="color: var(--accent-yellow); font-weight: 800; font-size: 0.65rem; text-transform: uppercase; margin-top: 1px; white-space: nowrap;">
+                                        Bilan : ${totalStr}
+                                    </div>
                                 </div>
                              </div>`;
                 }
@@ -627,22 +649,57 @@ function loadMatches(licence) {
                     setsHtml += '</div>';
                 }
 
-                html += `
-                <div class="match-card ${statusClass} py-1 px-2 mb-1 d-flex align-items-center">
-                    <div class="match-points-badge ${statusClass}">${ptsLabel}</div>
-                    <div class="match-info flex-grow-1 ms-2">
-                        <div class="match-opponent d-flex justify-content-between align-items-center">
-                            <div>
-                                <span class="text-warning small me-1">${Number(m.adversaire_points).toFixed(1)}</span>
-                                ${liveBadge}${m.adversaire_nom}
-                            </div>
-                            <div class="d-flex align-items-center gap-2">
-                                ${setsHtml}
-                                <span class="match-result-badge ${isWin ? 'bg-success' : 'bg-danger'}">${isWin ? 'Victoire' : 'Défaite'}</span>
+                const scoreMeeting = (m.score_ja !== null && m.score_jb !== null && m.score_ja !== undefined) ? `${m.score_ja}-${m.score_jb}` : '';
+                const invalidScores = ['1-0', '0-1', '1-2', '2-1', '0-2', '2-0'];
+                const displayScore = (scoreMeeting && !invalidScores.includes(scoreMeeting)) ? scoreMeeting : '';
+                
+                if (window.innerWidth <= 768) {
+                    html += `
+                    <div class="match-card ${statusClass} py-2 px-2 mb-2 d-flex align-items-center" style="border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.02);">
+                        <div class="match-points-badge ${statusClass}" style="min-width: 50px; text-align: center; font-size: 0.9rem; font-weight: 800;">${ptsLabel}</div>
+                        <div class="match-info flex-grow-1 ms-2">
+                            <div class="d-flex flex-column gap-1">
+                                <!-- Ligne 1: Points Adv, Badges, Nom Prénom -->
+                                <div class="d-flex align-items-center flex-wrap gap-1" style="line-height: 1.2;">
+                                    <span class="text-warning fw-bold" style="font-size: 0.8rem;">${Math.round(m.adversaire_points)} pts</span>
+                                    ${liveBadge}
+                                    <span class="text-white" style="font-size: 0.85rem; font-weight: 600;">${m.adversaire_nom}</span>
+                                </div>
+                                <!-- Ligne 2: Score rencontre, Sets, Badge V/D -->
+                                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="text-muted" style="font-size: 0.75rem;">
+                                            ${displayScore ? '<i class="fas fa-poll-h me-1" style="font-size: 0.65rem;"></i>' + displayScore : ''}
+                                        </div>
+                                        <div style="transform: scale(0.9); transform-origin: left center;">
+                                            ${setsHtml}
+                                        </div>
+                                    </div>
+                                    <span class="badge ${isWin ? 'bg-success' : 'bg-danger'}" style="font-size: 0.65rem; padding: 2px 5px; font-weight: 800; border-radius: 4px;">
+                                        ${isWin ? 'VICTOIRE' : 'DÉFAITE'}
+                                    </span>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>`;
+                    </div>`;
+                } else {
+                    html += `
+                    <div class="match-card ${statusClass} py-1 px-2 mb-1 d-flex align-items-center">
+                        <div class="match-points-badge ${statusClass}">${ptsLabel}</div>
+                        <div class="match-info flex-grow-1 ms-2">
+                            <div class="match-opponent d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="text-warning small me-1">${Number(m.adversaire_points).toFixed(1)}</span>
+                                    ${liveBadge}${m.adversaire_nom}
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    ${setsHtml}
+                                    <span class="match-result-badge ${isWin ? 'bg-success' : 'bg-danger'}">${isWin ? 'Victoire' : 'Défaite'}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                }
             });
             container.innerHTML = html + '</div>';
         })
@@ -717,13 +774,74 @@ function initAvatarUpload() {
     });
 }
 
+let avatarTapTimer = null;
+let lastAvatarTapTime = 0;
+let lastAvatarTapLicence = null;
+
 function triggerAvatarUpload(licence) {
-    currentUploadLicence = licence;
-    document.getElementById('avatarInput').click();
+    if (window.innerWidth > 768) {
+        // Desktop : clic simple pour upload
+        currentUploadLicence = licence;
+        document.getElementById('avatarInput').click();
+        return;
+    }
+
+    // Mobile : Détection Double Tap
+    const now = Date.now();
+    const delta = now - lastAvatarTapTime;
+    
+    if (licence === lastAvatarTapLicence && delta < 300) {
+        // DOUBLE TAP -> Upload
+        clearTimeout(avatarTapTimer);
+        lastAvatarTapTime = 0;
+        lastAvatarTapLicence = null;
+        
+        currentUploadLicence = licence;
+        document.getElementById('avatarInput').click();
+    } else {
+        // PREMIER TAP -> Attente d'un second ou preview
+        lastAvatarTapTime = now;
+        lastAvatarTapLicence = licence;
+        
+        avatarTapTimer = setTimeout(() => {
+            // SINGLE TAP -> Preview Image
+            const playerRow = document.querySelector(`.player-row[data-licence="${licence}"]`);
+            const img = playerRow ? playerRow.querySelector('.avatar-img') : null;
+            if (img) {
+                showImagePreview(img.src);
+            }
+            lastAvatarTapTime = 0;
+            lastAvatarTapLicence = null;
+        }, 300);
+    }
+}
+
+function showImagePreview(src) {
+    let overlay = document.getElementById('imageOverlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'imageOverlay';
+        overlay.innerHTML = `
+            <div class="overlay-content">
+                <img id="overlayImg" src="">
+                <button class="overlay-close"><i class="fas fa-times"></i></button>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        overlay.addEventListener('click', (e) => {
+            if (e.target.id === 'imageOverlay' || e.target.closest('.overlay-close')) {
+                overlay.classList.remove('active');
+            }
+        });
+    }
+    
+    const overlayImg = document.getElementById('overlayImg');
+    overlayImg.src = src;
+    overlay.classList.add('active');
 }
 
 function initAvatarSizeSelector() {
-    const container = document.getElementById('avatarSizeSelectorPC');
+    const container = document.getElementById('avatarSizeSelector');
     if (!container) return;
 
     container.addEventListener('click', (e) => {
@@ -744,7 +862,7 @@ function setAvatarSize(size) {
     });
 
     // Update active button
-    const container = document.getElementById('avatarSizeSelectorPC');
+    const container = document.getElementById('avatarSizeSelector');
     if (container) {
         container.querySelectorAll('.btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.size === size);
@@ -757,6 +875,7 @@ function setAvatarSize(size) {
 }
 
 function initAvatarHoverPreview() {
+    if (window.innerWidth <= 768) return;
     let previewEl = null;
 
     document.addEventListener('mouseover', (e) => {
