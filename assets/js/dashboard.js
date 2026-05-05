@@ -10,14 +10,15 @@ document.addEventListener('DOMContentLoaded', function() {
     initAvatarSizeSelector();
     initThemeToggle();
     initAvatarHoverPreview();
-    restoreState(); // Restaurer l'état au chargement
+    restoreState(); 
+    initMobileSort(); // Initialiser le tri mobile
     
     // Détecter le clic sur la ligne (sauf si on clique sur une icône d'action)
     const table = document.querySelector('.players-table');
     if (table) {
         table.addEventListener('click', function(e) {
             const row = e.target.closest('.player-row');
-            const isIcon = e.target.closest('.refresh-icon') || e.target.closest('.player-avatar');
+            const isIcon = e.target.closest('.refresh-icon') || e.target.closest('.player-avatar') || e.target.closest('.btn-mobile-details');
             
             if (row && !isIcon) {
                 toggleDetails(row.dataset.licence);
@@ -215,11 +216,41 @@ function sortTable(columnIndex, forceDir = null) {
         }
     });
 
-    table.querySelectorAll('th i').forEach(i => i.className = 'fas fa-sort');
-    const icon = table.querySelectorAll('th')[columnIndex].querySelector('i');
-    if (icon) icon.className = direction === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down';
-    
+    // Sync Mobile UI if exists
+    const mobileSortCol = document.getElementById('mobileSortCol');
+    const mobileSortDir = document.getElementById('mobileSortDir');
+    if (mobileSortCol) mobileSortCol.value = columnIndex;
+    if (mobileSortDir) {
+        mobileSortDir.dataset.dir = direction;
+        const mobileIcon = mobileSortDir.querySelector('i');
+        if (mobileIcon) {
+            mobileIcon.className = direction === 'asc' ? 'fas fa-sort-amount-up' : 'fas fa-sort-amount-down';
+        }
+    }
+
     saveState(); // Sauvegarder après tri
+}
+
+function initMobileSort() {
+    const mobileSortCol = document.getElementById('mobileSortCol');
+    const mobileSortDir = document.getElementById('mobileSortDir');
+    
+    if (mobileSortCol && mobileSortDir) {
+        mobileSortCol.addEventListener('change', function() {
+            const colIndex = parseInt(this.value);
+            const direction = mobileSortDir.dataset.dir;
+            sortTable(colIndex, direction);
+        });
+        
+        mobileSortDir.addEventListener('click', function() {
+            const colIndex = parseInt(mobileSortCol.value);
+            const newDir = this.dataset.dir === 'desc' ? 'asc' : 'desc';
+            this.dataset.dir = newDir;
+            
+            // L'icône sera mise à jour par sortTable -> updateSortIcons (via sync)
+            sortTable(colIndex, newDir);
+        });
+    }
 }
 
 function initSyncAll() {

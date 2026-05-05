@@ -43,31 +43,63 @@ $isProvisionalPeriod = ($day >= 1 && $day <= 10);
             <p class="lead text-muted">Consultez les classements, les progressions et l'historique détaillé de chaque joueur.</p>
         </header>
 
-        <!-- TOOLBAR UNIFIÉE -->
-        <div class="toolbar-pro" style="display: flex; align-items: center; gap: 15px; background: var(--bg-card); padding: 12px 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid var(--border-color);">
-            <div class="search-wrapper-pro" style="flex-grow: 1; position: relative;">
-                <i class="fas fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
-                <input type="text" id="playerSearch" placeholder="Rechercher un joueur..." class="form-control">
-                <i class="fas fa-times-circle search-clear hidden" id="searchClear" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted); cursor: pointer; z-index: 10;"></i>
-            </div>
-
-            <div class="btn-group-pro" style="display: flex; gap: 8px;">
-                <div class="btn-group" role="group" id="avatarSizeSelectorPC">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-size="sm"><i class="fas fa-th"></i></button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-size="md"><i class="fas fa-th-large"></i></button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-size="lg"><i class="fas fa-square"></i></button>
+        <!-- TOOLBAR UNIFIÉE ET RESPONSIVE -->
+        <div class="toolbar-pro">
+            <div class="row g-2 align-items-center">
+                <!-- Barre de Recherche & Compteur Mobile -->
+                <div class="col-12 col-md-5">
+                    <div class="search-wrapper-pro">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="playerSearch" placeholder="Rechercher un joueur..." class="form-control">
+                        <i class="fas fa-times-circle search-clear hidden" id="searchClear"></i>
+                        <div class="player-count-badge d-md-none">
+                            <span id="playerCountMobile"><?php echo count($players); ?></span>
+                        </div>
+                    </div>
                 </div>
 
-                <button class="btn btn-outline-warning btn-sm" id="btnSyncAllPC">
-                    <i class="fas fa-bolt me-1"></i> Sync Club
-                </button>
-                
-                <button class="theme-toggle" id="themeToggleBtn" style="background: none; border: 1px solid var(--border-color); color: var(--accent-yellow); border-radius: 8px; padding: 5px 12px; cursor: pointer;">
-                    <i class="fas fa-moon"></i>
-                </button>
+                <!-- Actions Secondaires (Taille, Sync, Thème) -->
+                <div class="col-12 col-md-4 d-flex justify-content-between justify-content-md-end gap-2">
+                    <div class="btn-group" role="group" id="avatarSizeSelector">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-size="sm"><i class="fas fa-th"></i></button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-size="md"><i class="fas fa-th-large"></i></button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-size="lg"><i class="fas fa-square"></i></button>
+                    </div>
 
-                <div class="stats-summary ms-3" style="color: var(--text-muted); font-weight: 500; display: flex; align-items: center;">
-                    <span id="playerCount" class="fw-bold me-1" style="color: var(--text-main);"><?php echo count($players); ?></span> joueurs
+                    <button class="btn btn-outline-warning btn-sm" id="btnSyncAll">
+                        <i class="fas fa-bolt me-1"></i> <span class="d-none d-sm-inline">Sync Club</span>
+                    </button>
+                    
+                    <button class="theme-toggle" id="themeToggleBtn">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </div>
+
+                <!-- Tri Mobile Uniquement (Visible < 768px) -->
+                <div class="col-12 d-md-none">
+                    <div class="mobile-sort-container d-flex gap-2 align-items-center">
+                        <span class="text-muted small fw-bold text-uppercase">Trier par:</span>
+                        <select id="mobileSortCol" class="form-select form-select-sm flex-grow-1">
+                            <option value="1">Nom</option>
+                            <option value="2">Officiel</option>
+                            <option value="3">Phase 1</option>
+                            <option value="4">Phase 2</option>
+                            <option value="5">Mensuel</option>
+                            <option value="6" selected>Virtuel</option>
+                            <option value="7">Mois</option>
+                            <option value="8">Année</option>
+                        </select>
+                        <button id="mobileSortDir" class="btn btn-outline-secondary btn-sm" data-dir="desc">
+                            <i class="fas fa-sort-amount-down"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Compteur Desktop (Visible >= 992px) -->
+                <div class="col-md-3 d-none d-lg-flex justify-content-end align-items-center">
+                    <div class="stats-summary">
+                        <span id="playerCount" class="fw-bold me-1"><?php echo count($players); ?></span> joueurs
+                    </div>
                 </div>
             </div>
         </div>
@@ -87,34 +119,34 @@ $isProvisionalPeriod = ($day >= 1 && $day <= 10);
             <table class="players-table table table-dark table-hover">
                 <thead>
                     <tr>
-                        <th style="width: 50px;">#</th>
-                        <th class="col-player" style="text-align: left;">JOUEUR <i class="fas fa-sort"></i></th>
-                        <th class="col-stat">OFFICIEL <i class="fas fa-sort"></i></th>
-                        <th class="col-stat">PH. 1 <i class="fas fa-sort"></i></th>
-                        <th class="col-stat">PH. 2 <i class="fas fa-sort"></i></th>
-                        <th class="col-stat">MENSUEL <i class="fas fa-sort"></i></th>
-                        <th class="col-stat col-virtuel" style="color: var(--accent-yellow);">VIRTUEL <i class="fas fa-sort"></i></th>
-                        <th class="col-stat">MOIS <i class="fas fa-sort"></i></th>
-                        <th class="col-stat">ANNÉE <i class="fas fa-sort"></i></th>
+                        <th class="text-center">#</th>
+                        <th class="col-player">JOUEUR <i class="fas fa-sort"></i></th>
+                        <th class="text-center col-stat">OFFICIEL <i class="fas fa-sort-down"></i></th>
+                        <th class="text-center col-stat">PH. 1 <i class="fas fa-sort"></i></th>
+                        <th class="text-center col-stat">PH. 2 <i class="fas fa-sort"></i></th>
+                        <th class="text-center col-stat">MENSUEL <i class="fas fa-sort"></i></th>
+                        <th class="text-center col-stat">VIRTUEL <i class="fas fa-sort"></i></th>
+                        <th class="text-center col-stat">MOIS <i class="fas fa-sort"></i></th>
+                        <th class="text-center col-stat">ANNÉE <i class="fas fa-sort"></i></th>
                     </tr>
                 </thead>
                 <tbody>
+                    <?php foreach ($players as $p): ?>
                     <?php 
-                    foreach ($players as $p): 
-                        $safeMensuel = ($p['points_mensuel'] > 0) ? $p['points_mensuel'] : $p['points_officiel'];
-                        $pointsPh1 = ($p['points_initial'] > 0) ? $p['points_initial'] : $p['points_officiel'];
-                        $pointsPh2 = ($p['points_ph2'] > 0) ? $p['points_ph2'] : $p['points_officiel'];
-                        $pointsVirtuel = ($p['points_virtuel'] > 0) ? $p['points_virtuel'] : $safeMensuel;
+                        $pointsPh1 = (float)(($p['points_initial'] ?? 0) ?: $p['points_officiel']);
+                        $pointsPh2 = (float)(($p['points_ph2'] ?? 0) ?: $p['points_officiel']);
+                        $pointsVirtuel = (float)$p['points_virtuel'];
+                        $safeMensuel = (float)(($p['points_mensuel'] ?? 0) ?: $p['points_officiel']);
                         
-                        $progMois = ($p['points_mensuel_precedent'] > 0) ? ($safeMensuel - $p['points_mensuel_precedent']) : 0;
+                        $progMois = $pointsVirtuel - $safeMensuel;
                         $progAnnee = $pointsVirtuel - $pointsPh1;
                         $initials = strtoupper(substr($p['nom'], 0, 1) . substr($p['prenom'], 0, 1));
                     ?>
                     <tr class="player-row" data-licence="<?php echo $p['licence']; ?>">
-                        <td class="text-center">
+                        <td class="text-center d-none d-md-table-cell">
                             <span class="rank-number"><?php echo $rank++; ?></span>
                         </td>
-                        <td>
+                        <td class="col-main-content">
                             <div class="player-info">
                                 <div class="player-avatar avatar-md" 
                                      onclick="triggerAvatarUpload('<?php echo $p['licence']; ?>')"
@@ -134,15 +166,69 @@ $isProvisionalPeriod = ($day >= 1 && $day <= 10);
                                         <span class="text-uppercase"><?php echo htmlspecialchars($p['nom']); ?></span>
                                         <i class="fas fa-sync-alt refresh-icon" onclick="syncPlayer('<?php echo $p['licence']; ?>')"></i>
                                     </div>
-                                    <div style="color: rgba(255,255,255,0.7); font-size: 0.85rem;"><?php echo htmlspecialchars($p['prenom']); ?></div>
+                                    <div class="player-prenom"><?php echo htmlspecialchars($p['prenom']); ?></div>
                                     <div class="player-licence"><?php echo $p['licence']; ?></div>
+                                </div>
+                                <!-- BOUTON DÉTAILS MOBILE -->
+                                <button class="btn-mobile-details d-md-none" onclick="toggleDetails('<?php echo $p['licence']; ?>')">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+
+                            <!-- GRILLE STATS MOBILE -->
+                            <div class="mobile-stats-grid d-md-none">
+                                <div class="row g-0 stat-row">
+                                    <div class="col-4 stat-item">
+                                        <div class="stat-label">PHASE 1</div>
+                                        <div class="stat-value"><?php echo number_format($pointsPh1, 1, '.', ''); ?></div>
+                                    </div>
+                                    <div class="col-4 stat-item">
+                                        <div class="stat-label">MENSUEL</div>
+                                        <div class="stat-value val-monthly">
+                                            <span class="main-val"><?php echo number_format($safeMensuel, 1, '.', ''); ?></span>
+                                            <?php if ($safeMensuel - $p['points_officiel'] != 0): ?>
+                                            <small class="prog-val <?php echo ($safeMensuel - $p['points_officiel']) > 0 ? 'plus' : 'minus'; ?>">
+                                                <?php echo ($safeMensuel - $p['points_officiel']) > 0 ? '+' : ''; ?><?php echo number_format($safeMensuel - $p['points_officiel'], 1, '.', ''); ?>
+                                            </small>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                    <div class="col-4 stat-item">
+                                        <div class="stat-label">MOIS</div>
+                                        <div class="stat-value prog-highlight <?php echo $progMois > 0 ? 'plus' : ($progMois < 0 ? 'minus' : ''); ?>">
+                                            <?php echo ($progMois > 0 ? '+' : '') . number_format($progMois, 1, '.', ''); ?>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row g-0 stat-row">
+                                    <div class="col-4 stat-item">
+                                        <div class="stat-label">PHASE 2</div>
+                                        <div class="stat-value"><?php echo number_format($pointsPh2, 1, '.', ''); ?></div>
+                                    </div>
+                                    <div class="col-4 stat-item">
+                                        <div class="stat-label">VIRTUEL</div>
+                                        <div class="stat-value col-virtuel-big">
+                                            <span class="main-val"><?php echo number_format($pointsVirtuel, 1, '.', ''); ?></span>
+                                            <?php if ($pointsVirtuel - $p['points_officiel'] != 0): ?>
+                                            <small class="prog-val <?php echo ($pointsVirtuel - $p['points_officiel']) > 0 ? 'plus' : 'minus'; ?>">
+                                                <?php echo ($pointsVirtuel - $p['points_officiel']) > 0 ? '+' : ''; ?><?php echo number_format($pointsVirtuel - $p['points_officiel'], 1, '.', ''); ?>
+                                            </small>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                    <div class="col-4 stat-item">
+                                        <div class="stat-label">ANNÉE</div>
+                                        <div class="stat-value prog-highlight <?php echo $progAnnee > 0 ? 'plus' : ($progAnnee < 0 ? 'minus' : ''); ?>">
+                                            <?php echo ($progAnnee > 0 ? '+' : '') . number_format($progAnnee, 1, '.', ''); ?>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </td>
-                        <td class="text-center val-official"><?php echo number_format($p['points_officiel'], 1, '.', ''); ?></td>
-                        <td class="text-center"><?php echo number_format($pointsPh1, 1, '.', ''); ?></td>
-                        <td class="text-center"><?php echo number_format($pointsPh2, 1, '.', ''); ?></td>
-                        <td class="text-center val-monthly">
+                        <td class="text-center val-official d-none d-md-table-cell"><?php echo number_format($p['points_officiel'], 1, '.', ''); ?></td>
+                        <td class="text-center d-none d-md-table-cell"><?php echo number_format($pointsPh1, 1, '.', ''); ?></td>
+                        <td class="text-center d-none d-md-table-cell"><?php echo number_format($pointsPh2, 1, '.', ''); ?></td>
+                        <td class="text-center val-monthly d-none d-md-table-cell">
                             <span class="main-val"><?php echo number_format($safeMensuel, 1, '.', ''); ?></span>
                             <?php if ($safeMensuel - $p['points_officiel'] != 0): ?>
                             <small class="prog-val <?php echo ($safeMensuel - $p['points_officiel']) > 0 ? 'plus' : 'minus'; ?>">
@@ -150,7 +236,7 @@ $isProvisionalPeriod = ($day >= 1 && $day <= 10);
                             </small>
                             <?php endif; ?>
                         </td>
-                        <td class="text-center col-virtuel-big">
+                        <td class="text-center col-virtuel-big d-none d-md-table-cell">
                             <span class="main-val"><?php echo number_format($pointsVirtuel, 1, '.', ''); ?></span>
                             <?php if ($pointsVirtuel - $p['points_officiel'] != 0): ?>
                             <small class="prog-val <?php echo ($pointsVirtuel - $p['points_officiel']) > 0 ? 'plus' : 'minus'; ?>" style="font-size: 0.7rem; font-weight: 700; margin-left: 4px;">
@@ -158,10 +244,10 @@ $isProvisionalPeriod = ($day >= 1 && $day <= 10);
                             </small>
                             <?php endif; ?>
                         </td>
-                        <td class="text-center prog-highlight <?php echo $progMois > 0 ? 'plus' : ($progMois < 0 ? 'minus' : ''); ?>">
+                        <td class="text-center prog-highlight <?php echo $progMois > 0 ? 'plus' : ($progMois < 0 ? 'minus' : ''); ?> d-none d-md-table-cell">
                             <?php echo ($progMois > 0 ? '+' : '') . number_format($progMois, 1, '.', ''); ?>
                         </td>
-                        <td class="text-center prog-highlight <?php echo $progAnnee > 0 ? 'plus' : ($progAnnee < 0 ? 'minus' : ''); ?>">
+                        <td class="text-center prog-highlight <?php echo $progAnnee > 0 ? 'plus' : ($progAnnee < 0 ? 'minus' : ''); ?> d-none d-md-table-cell">
                             <?php echo ($progAnnee > 0 ? '+' : '') . number_format($progAnnee, 1, '.', ''); ?>
                         </td>
                     </tr>
