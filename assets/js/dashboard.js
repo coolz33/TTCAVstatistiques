@@ -603,7 +603,7 @@ function loadMatches(licence) {
                                     <i class="far fa-calendar-alt me-1"></i> ${groupKey}
                                     <span class="badge-coef">COEFF x${coef}</span>
                                 </div>
-                                <div style="flex-shrink: 0; font-size: 0.75rem; background: rgba(0,0,0,0.15); padding: 4px 10px; border-radius: 8px; text-align: right; line-height: 1.3; border: 1px solid rgba(255,255,255,0.05); min-width: 95px;">
+                                <div class="match-group-bilan">
                                     <div style="white-space: nowrap;">${wonStr} | ${lostStr}</div>
                                     <div style="color: var(--accent-yellow); font-weight: 800; font-size: 0.65rem; text-transform: uppercase; margin-top: 1px; white-space: nowrap;">
                                         Bilan : ${totalStr}
@@ -655,7 +655,7 @@ function loadMatches(licence) {
                 
                 if (window.innerWidth <= 768) {
                     html += `
-                    <div class="match-card ${statusClass} py-2 px-2 mb-2 d-flex align-items-center" style="border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.02);">
+                    <div class="match-card ${statusClass} py-2 px-2 mb-2 d-flex align-items-center">
                         <div class="match-points-badge ${statusClass}" style="min-width: 50px; text-align: center; font-size: 0.9rem; font-weight: 800;">${ptsLabel}</div>
                         <div class="match-info flex-grow-1 ms-2">
                             <div class="d-flex flex-column gap-1">
@@ -663,7 +663,7 @@ function loadMatches(licence) {
                                 <div class="d-flex align-items-center flex-wrap gap-1" style="line-height: 1.2;">
                                     <span class="text-warning fw-bold" style="font-size: 0.8rem;">${Math.round(m.adversaire_points)} pts</span>
                                     ${liveBadge}
-                                    <span class="text-white" style="font-size: 0.85rem; font-weight: 600;">${m.adversaire_nom}</span>
+                                    <span class="match-opponent-name" style="font-size: 0.85rem; font-weight: 600;">${m.adversaire_nom}</span>
                                 </div>
                                 <!-- Ligne 2: Score rencontre, Sets, Badge V/D -->
                                 <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
@@ -701,7 +701,13 @@ function loadMatches(licence) {
                     </div>`;
                 }
             });
-            container.innerHTML = html + '</div>';
+            container.innerHTML = html + `
+                <div class="text-center mt-4 mb-2">
+                    <button class="btn-close-details-bottom" onclick="toggleDetails('${licence}')">
+                        <i class="fas fa-chevron-up me-2"></i> FERMER L'HISTORIQUE
+                    </button>
+                </div>
+            </div>`;
         })
         .catch(err => {
             console.error('Error loading matches:', err);
