@@ -47,6 +47,21 @@ function syncPlayer(licence) {
         });
 }
 
+function copyToClipboard(text, element) {
+    navigator.clipboard.writeText(text).then(() => {
+        const originalHtml = element.innerHTML;
+        element.innerHTML = '<i class="fas fa-check text-success me-1"></i> Copié !';
+        element.classList.add('copied');
+        
+        setTimeout(() => {
+            element.innerHTML = originalHtml;
+            element.classList.remove('copied');
+        }, 1500);
+    }).catch(err => {
+        console.error('Erreur lors de la copie :', err);
+    });
+}
+
 function saveState() {
     const searchInput = document.getElementById('playerSearch');
     const expanded = Array.from(document.querySelectorAll('.details-row:not(.hidden-row)'))

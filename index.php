@@ -172,7 +172,9 @@ $isProvisionalPeriod = ($day >= 1 && $day <= 10);
                                         <i class="fas fa-sync-alt refresh-icon" onclick="syncPlayer('<?php echo $p['licence']; ?>')"></i>
                                     </div>
                                     <div class="player-prenom"><?php echo htmlspecialchars($p['prenom']); ?></div>
-                                    <div class="player-licence"><?php echo $p['licence']; ?></div>
+                                    <div class="player-licence" onclick="event.stopPropagation(); copyToClipboard('<?php echo $p['licence']; ?>', this)" title="Cliquer pour copier la licence">
+                                        <?php echo $p['licence']; ?>
+                                    </div>
                                 </div>
                                 <!-- BOUTON DÉTAILS MOBILE -->
                                 <button class="btn-mobile-details d-md-none" onclick="toggleDetails('<?php echo $p['licence']; ?>')">

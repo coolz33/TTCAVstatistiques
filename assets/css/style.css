@@ -1172,3 +1172,23 @@ body.light-theme .stats-summary {
     border-color: var(--accent-yellow) !important;
     color: #000 !important;
 }
+
+
+/* License Copy Feedback */
+.player-licence {
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: monospace;
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+
+.player-licence:hover {
+    color: var(--accent-yellow) !important;
+    background: rgba(236, 201, 75, 0.1);
+}
+
+.player-licence.copied {
+    color: var(--plus-color) !important;
+    font-weight: bold;
+}
