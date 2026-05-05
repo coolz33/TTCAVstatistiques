@@ -108,10 +108,14 @@ function initTableEvents() {
 function initSearch() {
     const searchInput = document.getElementById('playerSearch');
     const clearBtn = document.getElementById('searchClear');
+    const showInactiveCheckbox = document.getElementById('showInactive');
+    
     if (!searchInput) return;
 
-    searchInput.addEventListener('input', function() {
-        const term = this.value.toLowerCase();
+    function applyFilters() {
+        const term = searchInput.value.toLowerCase();
+        const showInactive = showInactiveCheckbox ? showInactiveCheckbox.checked : true;
+        
         if (clearBtn) {
             clearBtn.classList.toggle('hidden', !term);
         }
@@ -125,9 +129,13 @@ function initSearch() {
             const name = row.querySelector('.player-name').textContent.toLowerCase();
             const prenom = row.querySelector('.player-prenom').textContent.toLowerCase();
             const licence = row.querySelector('.player-licence').textContent.toLowerCase();
+            const progAnnee = parseFloat(row.dataset.progAnnee || 0);
             const detailsRow = document.getElementById('details-' + row.dataset.licence);
 
-            if (name.includes(term) || prenom.includes(term) || licence.includes(term)) {
+            const matchesSearch = name.includes(term) || prenom.includes(term) || licence.includes(term);
+            const matchesActivity = showInactive || progAnnee !== 0;
+
+            if (matchesSearch && matchesActivity) {
                 row.classList.remove('hidden');
                 visibleCount++;
                 
@@ -150,12 +158,18 @@ function initSearch() {
         if (playerCountSpan) playerCountSpan.textContent = visibleCount;
         if (playerCountMobileSpan) playerCountMobileSpan.textContent = visibleCount;
         saveState(); // Sauvegarder après filtrage
-    });
+    }
 
+    searchInput.addEventListener('input', applyFilters);
+    
+    if (showInactiveCheckbox) {
+        showInactiveCheckbox.addEventListener('change', applyFilters);
+    }
+    
     if (clearBtn) {
         clearBtn.addEventListener('click', function() {
             searchInput.value = '';
-            searchInput.dispatchEvent(new Event('input'));
+            applyFilters();
             searchInput.focus();
         });
     }
@@ -872,8 +886,6 @@ function setAvatarSize(size) {
     if (container) {
         container.querySelectorAll('.btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.size === size);
-            btn.classList.toggle('btn-secondary', btn.dataset.size === size);
-            btn.classList.toggle('btn-outline-secondary', btn.dataset.size !== size);
         });
     }
     

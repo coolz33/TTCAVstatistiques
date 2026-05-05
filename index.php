@@ -45,26 +45,37 @@ $isProvisionalPeriod = ($day >= 1 && $day <= 10);
 
         <!-- TOOLBAR UNIFIÉE ET RESPONSIVE -->
         <div class="toolbar-pro">
-            <div class="row g-2 align-items-center">
-                <!-- Barre de Recherche & Compteur Mobile -->
-                <div class="col-12 col-md-5">
-                    <div class="search-wrapper-pro">
+            <div class="d-flex flex-wrap align-items-center gap-3">
+                <!-- Bloc Principal: Recherche + Compteur (Connectés) -->
+                <div class="flex-grow-1 d-flex align-items-center" style="min-width: 300px;">
+                    <div class="search-wrapper-pro flex-grow-1">
                         <i class="fas fa-search"></i>
-                        <input type="text" id="playerSearch" placeholder="Rechercher un joueur..." class="form-control">
+                        <input type="text" id="playerSearch" placeholder="Rechercher un joueur..." class="form-control rounded-end-0">
                         <i class="fas fa-times-circle search-clear hidden" id="searchClear"></i>
                         <div class="player-count-badge d-md-none">
                             <span id="playerCountMobile"><?php echo count($players); ?></span>
                         </div>
                     </div>
+                    
+                    <div class="stats-summary d-none d-sm-flex align-items-center px-3 rounded-end border border-start-0" style="height: 38px; background: var(--bg-input);">
+                        <span id="playerCount" class="fw-bold me-1"><?php echo count($players); ?></span> <span class="text-muted small text-uppercase fw-bold" style="font-size: 0.6rem;">joueurs</span>
+                    </div>
                 </div>
 
-                <!-- Actions Secondaires (Taille, Sync, Thème) -->
-                <div class="col-12 col-md-4 d-flex justify-content-between justify-content-md-end gap-2">
-                    <div class="btn-group" role="group" id="avatarSizeSelector">
-                        <button type="button" class="btn btn-outline-secondary btn-sm" data-size="sm"><i class="fas fa-th"></i></button>
-                        <button type="button" class="btn btn-outline-secondary btn-sm" data-size="md"><i class="fas fa-th-large"></i></button>
-                        <button type="button" class="btn btn-outline-secondary btn-sm" data-size="lg"><i class="fas fa-square"></i></button>
+                <!-- Bloc Filtres et Actions -->
+                <div class="d-flex align-items-center gap-3">
+                    <div class="form-check form-switch d-flex align-items-center">
+                        <input class="form-check-input" type="checkbox" id="showInactive" checked>
+                        <label class="form-check-label ms-2 text-nowrap small text-muted fw-bold text-uppercase d-none d-sm-inline" for="showInactive" style="font-size: 0.65rem; letter-spacing: 0.05em;">Inactifs</label>
                     </div>
+
+                    <div class="btn-group d-flex" role="group" id="avatarSizeSelector">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-size="sm" title="Petites vignettes"><i class="fas fa-th"></i></button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-size="md" title="Moyennes vignettes"><i class="fas fa-th-large"></i></button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-size="lg" title="Grandes vignettes"><i class="fas fa-square"></i></button>
+                    </div>
+
+                    <div class="vr d-none d-md-block" style="opacity: 0.1;"></div>
 
                     <button class="btn btn-outline-warning btn-sm" id="btnSyncAll">
                         <i class="fas fa-bolt me-1"></i> <span class="d-none d-sm-inline">Sync Club</span>
@@ -76,7 +87,7 @@ $isProvisionalPeriod = ($day >= 1 && $day <= 10);
                 </div>
 
                 <!-- Tri Mobile Uniquement (Visible < 768px) -->
-                <div class="col-12 d-md-none">
+                <div class="col-12 d-md-none mt-2">
                     <div class="mobile-sort-container d-flex gap-2 align-items-center">
                         <span class="text-muted small fw-bold text-uppercase">Trier par:</span>
                         <select id="mobileSortCol" class="form-select form-select-sm flex-grow-1">
@@ -92,13 +103,6 @@ $isProvisionalPeriod = ($day >= 1 && $day <= 10);
                         <button id="mobileSortDir" class="btn btn-outline-secondary btn-sm" data-dir="desc">
                             <i class="fas fa-sort-amount-down"></i>
                         </button>
-                    </div>
-                </div>
-
-                <!-- Compteur Desktop (Visible >= 992px) -->
-                <div class="col-md-3 d-none d-lg-flex justify-content-end align-items-center">
-                    <div class="stats-summary">
-                        <span id="playerCount" class="fw-bold me-1"><?php echo count($players); ?></span> joueurs
                     </div>
                 </div>
             </div>
@@ -142,7 +146,7 @@ $isProvisionalPeriod = ($day >= 1 && $day <= 10);
                         $progAnnee = $pointsVirtuel - $pointsPh1;
                         $initials = strtoupper(substr($p['nom'], 0, 1) . substr($p['prenom'], 0, 1));
                     ?>
-                    <tr class="player-row" data-licence="<?php echo $p['licence']; ?>">
+                    <tr class="player-row" data-licence="<?php echo $p['licence']; ?>" data-prog-annee="<?php echo $progAnnee; ?>">
                         <td class="text-center d-none d-md-table-cell">
                             <span class="rank-number"><?php echo $rank++; ?></span>
                         </td>
