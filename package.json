@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "postcss": "^8.5.14",
+    "postcss-prefixwrap": "^1.58.0"
+  }
+}

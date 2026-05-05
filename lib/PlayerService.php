@@ -47,9 +47,21 @@ class PlayerService {
             }
         }
 
-        $currentMonthStart = date('Y-m-01');
-        $stmt = $this->db->prepare("SELECT SUM(points_calcules) as total_gain FROM matches WHERE licence = ? AND is_validated = 0 AND date_match >= ?");
-        $stmt->execute([$licence, $currentMonthStart]);
+        $day = (int)date('d');
+        if ($day < 11) {
+            // Avant le 11, le points_mensuel est celui du mois précédent.
+            // On ne compte QUE les matchs du mois précédent (jusqu'au dernier jour du mois dernier).
+            // On ignore les matchs du 01 au 10 du mois en cours.
+            $monthStart = date('Y-m-01', strtotime('first day of last month'));
+            $monthEnd = date('Y-m-t', strtotime('last day of last month'));
+            $stmt = $this->db->prepare("SELECT SUM(points_calcules) as total_gain FROM matches WHERE licence = ? AND is_validated = 0 AND date_match >= ? AND date_match <= ?");
+            $stmt->execute([$licence, $monthStart, $monthEnd]);
+        } else {
+            // A partir du 11, le points_mensuel est à jour. On compte les matchs du mois en cours.
+            $monthStart = date('Y-m-01');
+            $stmt = $this->db->prepare("SELECT SUM(points_calcules) as total_gain FROM matches WHERE licence = ? AND is_validated = 0 AND date_match >= ?");
+            $stmt->execute([$licence, $monthStart]);
+        }
         $row = $stmt->fetch();
         
         $totalGain = $row['total_gain'] ? (float)$row['total_gain'] : 0;
@@ -245,15 +257,14 @@ class PlayerService {
         $res = $this->api->request('xml_partie.php', ['numlic' => $licence], $cacheTime);
         if (!$res || !isset($res->partie)) return 0;
 
-        $currentMonth = date('Y-m');
+        $limitDate = date('Y-m-d', strtotime('-40 days'));
+        
         foreach ($res->partie as $p) {
             $dateRaw = (string)($p->date ?? $p->datematch);
             $dateMatch = implode('-', array_reverse(explode('/', $dateRaw)));
-            $isApril = (date('Y-m', strtotime($dateMatch)) === $currentMonth);
+            $isRecent = ($dateMatch >= $limitDate);
             
-            file_put_contents('debug_match.log', "INDIVIDUAL MATCH: date=$dateMatch, april=" . ($isApril ? 'YES' : 'NO') . ", adv=" . ($p->nom ?? $p->advnompre) . "\n", FILE_APPEND);
-            
-            if (!$isApril) continue;
+            if (!$isRecent) continue;
 
             $advNom = FFTTApi::cleanName($p->nom ?? $p->advnompre);
             $epreuve = (string)($p->epreuve ?? $p->libelle);
@@ -295,7 +306,13 @@ class PlayerService {
     }
 
     private function isDateRecent($dateStr) {
-        return (strpos($dateStr, '/04/2026') !== false);
+        $parts = explode('/', $dateStr);
+        if (count($parts) === 3) {
+            $dateMatch = "{$parts[2]}-{$parts[1]}-{$parts[0]}";
+            $limit = date('Y-m-d', strtotime('-40 days'));
+            return $dateMatch >= $limit;
+        }
+        return false;
     }
 
     private function findExistingMatch($licence, $date, $advNom, $idpartie = null, $victoire = null) {
@@ -558,11 +575,11 @@ class PlayerService {
         $pointM = (float)($finalDetail->joueur->pointm ?? $finalDetail->joueur->point ?? $best['points']);
         $valCla = (float)($finalDetail->joueur->valcla ?? $best['points']);
         
-        // LOGIQUE CRITIQUE : Si le target (classement XML) correspond au classement officiel (valcla), 
-        // on l'utilise car c'est probablement la base du calcul officiel du tournoi.
-        // Sinon, on prend les points mensuels (plus dynamique) SAUF si le target est 0.
-        if ($fallbackPoints > 0 && (int)$fallbackPoints === (int)$valCla) {
-            $this->log("MATCHING OFFICIAL RATING: Using fallback $fallbackPoints instead of monthly $pointM");
+        // LOGIQUE CRITIQUE : Si le target (classement XML) est différent du classement officiel (valcla), 
+        // on l'utilise car c'est probablement un classement spécifique au tournoi.
+        // Sinon, on prend les points mensuels (plus précis pour le calcul FFTT).
+        if ($fallbackPoints > 0 && (int)$fallbackPoints !== (int)$valCla) {
+            $this->log("SPECIFIC TOURNAMENT RATING: Using fallback $fallbackPoints instead of monthly $pointM");
             $finalPoints = $fallbackPoints;
         } else {
             $finalPoints = $pointM;

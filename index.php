@@ -18,6 +18,10 @@ $stmt->execute([$clubId]);
 $players = $stmt->fetchAll();
 
 $clubName = $club['nom'] ?? 'Club ' . $clubId;
+$rank = 1;
+
+$day = (int)date('d');
+$isProvisionalPeriod = ($day >= 1 && $day <= 10);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -33,206 +37,126 @@ $clubName = $club['nom'] ?? 'Club ' . $clubId;
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
 </head>
 <body class="dark-theme">
-    <div class="container py-5">
+    <div class="container">
         <header class="text-center mb-5">
             <h1 class="display-4 fw-bold">Les compétiteurs du <?php echo htmlspecialchars($clubName); ?> <small class="club-number">(<?php echo $clubId; ?>)</small></h1>
-            <p class="subtitle lead">Consultez les classements, les progressions et l'historique détaillé de chaque joueur.</p>
+            <p class="lead text-muted">Consultez les classements, les progressions et l'historique détaillé de chaque joueur.</p>
         </header>
 
-        <div class="search-bar-container mb-4">
-            <div class="row g-3 align-items-center">
-                <div class="col-md">
-                    <div class="search-input-wrapper">
-                        <i class="fas fa-search search-icon"></i>
-                        <input type="text" id="playerSearch" class="form-control" placeholder="Rechercher un joueur...">
-                        <i class="fas fa-times-circle search-clear" id="clearSearch" style="display: none;"></i>
-                    </div>
-                </div>
-                
-                <div class="col-md-auto d-none d-md-flex align-items-center gap-2">
-                    <div class="btn-group" role="group" id="avatarSizeSelectorPC">
-                        <button type="button" class="btn btn-outline-secondary btn-sm" data-size="sm" title="Petites vignettes"><i class="fas fa-th"></i></button>
-                        <button type="button" class="btn btn-outline-secondary btn-sm" data-size="md" title="Moyennes vignettes"><i class="fas fa-th-large"></i></button>
-                        <button type="button" class="btn btn-outline-secondary btn-sm" data-size="lg" title="Grandes vignettes"><i class="fas fa-square"></i></button>
-                    </div>
-
-                    <button class="btn btn-outline-warning btn-sm" id="btnSyncAllPC">
-                        <i class="fas fa-bolt me-1"></i> Sync Club
-                    </button>
-                    
-                    <button class="btn btn-outline-light btn-sm" onclick="location.href='loading.php?clubId=<?php echo $clubId; ?>'" title="Rafraîchir la page">
-                        <i class="fas fa-sync-alt"></i>
-                    </button>
-
-                    <button class="theme-toggle" id="themeToggleBtn" title="Passer en thème clair">
-                        <i class="fas fa-sun theme-icon-sun"></i>
-                        <span class="theme-toggle-thumb"></span>
-                        <i class="fas fa-moon theme-icon-moon"></i>
-                    </button>
-                </div>
-
-                <div class="col-md-auto text-center text-md-start">
-                    <div class="stats-summary">
-                        <span id="playerCount" class="fw-bold"><?php echo count($players); ?></span> joueurs
-                    </div>
-                </div>
+        <!-- TOOLBAR UNIFIÉE -->
+        <div class="toolbar-pro" style="display: flex; align-items: center; gap: 15px; background: var(--bg-card); padding: 12px 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid var(--border-color);">
+            <div class="search-wrapper-pro" style="flex-grow: 1; position: relative;">
+                <i class="fas fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+                <input type="text" id="playerSearch" placeholder="Rechercher un joueur..." class="form-control">
+                <i class="fas fa-times-circle search-clear hidden" id="searchClear" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted); cursor: pointer; z-index: 10;"></i>
             </div>
 
-            <!-- Mobile Only Controls (Size & Sync) -->
-            <div class="d-flex d-md-none justify-content-between align-items-center mt-3 flex-wrap gap-2">
-                <div class="d-flex align-items-center gap-2">
-                    <div class="btn-group" role="group" id="avatarSizeSelectorMobile">
-                        <button type="button" class="btn btn-outline-secondary btn-sm" data-size="sm"><i class="fas fa-th"></i></button>
-                        <button type="button" class="btn btn-outline-secondary btn-sm" data-size="md"><i class="fas fa-th-large"></i></button>
-                        <button type="button" class="btn btn-outline-secondary btn-sm" data-size="lg"><i class="fas fa-square"></i></button>
-                    </div>
-                    
-                    <div class="sort-selector-wrapper">
-                        <select id="mobileSortCol" class="form-select-sm">
-                            <option value="2">Officiel</option>
-                            <option value="3">Phase 1</option>
-                            <option value="4">Phase 2</option>
-                            <option value="5">Mensuel</option>
-                            <option value="6" selected>Virtuel</option>
-                            <option value="7">Prog. Mois</option>
-                            <option value="8">Prog. Saison</option>
-                        </select>
-                        <select id="mobileSortDir" class="form-select-sm">
-                            <option value="desc">DESC</option>
-                            <option value="asc">ASC</option>
-                        </select>
-                    </div>
+            <div class="btn-group-pro" style="display: flex; gap: 8px;">
+                <div class="btn-group" role="group" id="avatarSizeSelectorPC">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-size="sm"><i class="fas fa-th"></i></button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-size="md"><i class="fas fa-th-large"></i></button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-size="lg"><i class="fas fa-square"></i></button>
                 </div>
 
-                <div class="d-flex gap-2 align-items-center">
-                    <button class="btn btn-outline-warning btn-sm" id="btnSyncAllMobile">
-                        <i class="fas fa-bolt me-1"></i> Sync
-                    </button>
-                    <button class="btn btn-outline-light btn-sm" onclick="location.href='loading.php?clubId=<?php echo $clubId; ?>'">
-                        <i class="fas fa-sync-alt"></i>
-                    </button>
-                    <button class="theme-toggle" id="themeToggleBtnMobile" title="Passer en thème clair">
-                        <i class="fas fa-sun theme-icon-sun"></i>
-                        <span class="theme-toggle-thumb"></span>
-                        <i class="fas fa-moon theme-icon-moon"></i>
-                    </button>
+                <button class="btn btn-outline-warning btn-sm" id="btnSyncAllPC">
+                    <i class="fas fa-bolt me-1"></i> Sync Club
+                </button>
+                
+                <button class="theme-toggle" id="themeToggleBtn" style="background: none; border: 1px solid var(--border-color); color: var(--accent-yellow); border-radius: 8px; padding: 5px 12px; cursor: pointer;">
+                    <i class="fas fa-moon"></i>
+                </button>
+
+                <div class="stats-summary ms-3" style="color: var(--text-muted); font-weight: 500; display: flex; align-items: center;">
+                    <span id="playerCount" class="fw-bold me-1" style="color: var(--text-main);"><?php echo count($players); ?></span> joueurs
                 </div>
             </div>
         </div>
 
-        <div id="syncProgressContainer" class="hidden mb-4 p-3 history-card">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <span class="fw-bold"><i class="fas fa-sync fa-spin me-2"></i> Synchronisation du club en cours...</span>
-                <span id="syncProgressText" class="badge bg-warning text-dark">0/0</span>
+        <!-- PROGRESS BAR SYNC -->
+        <div id="syncProgressContainer" class="hidden mb-4" style="background: var(--bg-card); padding: 15px; border-radius: 12px; border: 1px solid var(--accent-yellow);">
+            <div class="d-flex justify-content-between mb-2">
+                <span class="fw-bold" style="color: var(--accent-yellow);">Synchronisation du club en cours...</span>
+                <span id="syncProgressText" class="text-muted">0/0</span>
             </div>
             <div class="progress" style="height: 10px; background: rgba(255,255,255,0.1);">
-                <div id="syncProgressBar" class="progress-bar bg-warning progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                <div id="syncProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-warning" role="progressbar" style="width: 0%"></div>
             </div>
         </div>
 
         <div class="table-responsive">
-            <table class="players-table table table-hover mb-0">
+            <table class="players-table table table-dark table-hover">
                 <thead>
                     <tr>
-                        <th class="col-rank pc-only-cell">#</th>
-                        <th class="col-player"><i class="fas fa-sort"></i> JOUEUR</th>
-                        <th class="col-stat pc-only-cell"><i class="fas fa-sort"></i> OFFICIEL</th>
-                        <th class="col-stat"><i class="fas fa-sort"></i> PH. 1</th>
-                        <th class="col-stat"><i class="fas fa-sort"></i> PH. 2</th>
-                        <th class="col-stat"><i class="fas fa-sort"></i> MENSUEL</th>
-                        <th class="col-stat col-virtuel"><i class="fas fa-sort-down"></i> VIRTUEL</th>
-                        <th class="col-stat"><i class="fas fa-calendar-day"></i> MOIS</th>
-                        <th class="col-stat"><i class="fas fa-sort"></i> ANNÉE</th>
+                        <th style="width: 50px;">#</th>
+                        <th class="col-player" style="text-align: left;">JOUEUR <i class="fas fa-sort"></i></th>
+                        <th class="col-stat">OFFICIEL <i class="fas fa-sort"></i></th>
+                        <th class="col-stat">PH. 1 <i class="fas fa-sort"></i></th>
+                        <th class="col-stat">PH. 2 <i class="fas fa-sort"></i></th>
+                        <th class="col-stat">MENSUEL <i class="fas fa-sort"></i></th>
+                        <th class="col-stat col-virtuel" style="color: var(--accent-yellow);">VIRTUEL <i class="fas fa-sort"></i></th>
+                        <th class="col-stat">MOIS <i class="fas fa-sort"></i></th>
+                        <th class="col-stat">ANNÉE <i class="fas fa-sort"></i></th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php 
-                    $rank = 1;
                     foreach ($players as $p): 
-                        // Sécurité : si mensuel est à 0, on prend l'officiel
                         $safeMensuel = ($p['points_mensuel'] > 0) ? $p['points_mensuel'] : $p['points_officiel'];
-                        
                         $pointsPh1 = ($p['points_initial'] > 0) ? $p['points_initial'] : $p['points_officiel'];
                         $pointsPh2 = ($p['points_ph2'] > 0) ? $p['points_ph2'] : $p['points_officiel'];
-                        
-                        // Sécurité : si virtuel est à 0, on prend le mensuel (lui-même sécurisé)
                         $pointsVirtuel = ($p['points_virtuel'] > 0) ? $p['points_virtuel'] : $safeMensuel;
                         
-                        // Indicateurs
-                        $progMensuelOfficiel = $safeMensuel - $p['points_officiel'];
-                        $progVirtuelPh2 = $pointsVirtuel - $pointsPh2;
                         $progMois = ($p['points_mensuel_precedent'] > 0) ? ($safeMensuel - $p['points_mensuel_precedent']) : 0;
                         $progAnnee = $pointsVirtuel - $pointsPh1;
-                        
                         $initials = strtoupper(substr($p['nom'], 0, 1) . substr($p['prenom'], 0, 1));
                     ?>
                     <tr class="player-row" data-licence="<?php echo $p['licence']; ?>">
-                        <td class="col-rank text-center pc-only-cell">
+                        <td class="text-center">
                             <span class="rank-number"><?php echo $rank++; ?></span>
                         </td>
-                        <td class="col-player">
+                        <td>
                             <div class="player-info">
-                                <div class="mobile-rank-wrapper">
-                                    <span class="rank-number"><?php echo ($rank-1); ?></span>
-                                </div>
-                                <div class="player-avatar avatar-md" data-licence="<?php echo $p['licence']; ?>" 
-                                     onclick="event.stopPropagation(); triggerAvatarUpload('<?php echo $p['licence']; ?>')"
+                                <div class="player-avatar avatar-md" 
+                                     onclick="triggerAvatarUpload('<?php echo $p['licence']; ?>')"
                                      oncontextmenu="event.preventDefault(); event.stopPropagation(); const img = this.querySelector('img'); if(img) triggerAvatarRecenter(img, '<?php echo $p['licence']; ?>')">
                                     <?php if (!empty($p['avatar'])): ?>
                                         <div class="avatar-crop-container">
-                                            <img src="assets/avatars/<?php echo $p['avatar']; ?>" 
-                                                 alt="" 
-                                                 class="avatar-img"
-                                                 style="width: <?php echo ($p['avatar_zoom'] ?? 1) * 100; ?>%; left: <?php echo $p['avatar_pos_x'] ?? 0; ?>%; top: <?php echo $p['avatar_pos_y'] ?? 0; ?>%;">
+                                            <img src="https://ttcav2.coolz.fr/assets/avatars/<?php echo $p['avatar']; ?>" class="avatar-img" 
+                                                 style="width: <?php echo ($p['avatar_zoom'] * 100); ?>%; left: <?php echo $p['avatar_pos_x']; ?>%; top: <?php echo $p['avatar_pos_y']; ?>%;">
                                         </div>
                                         <div class="recenter-hint"><i class="fas fa-arrows-alt"></i> Clic droit pour recentrer</div>
-                                        <div class="avatar-magnifier" onclick="event.stopPropagation(); showAvatarBig(this)"><i class="fas fa-search-plus"></i></div>
                                     <?php else: ?>
-                                        <div class="avatar-initials"><?php echo $initials; ?></div>
+                                        <?php echo $initials; ?>
                                     <?php endif; ?>
                                 </div>
                                 <div class="player-name-wrapper">
-                                    <span class="player-nom"><?php echo htmlspecialchars(strtoupper($p['nom'])); ?></span>
-                                    <span class="player-prenom">
-                                        <?php echo htmlspecialchars($p['prenom']); ?>
-                                        <i class="fas fa-sync-alt refresh-icon-mini" onclick="event.stopPropagation(); syncSinglePlayer('<?php echo $p['licence']; ?>')" title="Actualiser"></i>
-                                    </span>
-                                    <span class="player-licence"><?php echo $p['licence']; ?></span>
-                                </div>
-                                <div class="mobile-actions-wrapper">
-                                    <button class="btn-mobile-details" onclick="event.stopPropagation(); toggleDetails('<?php echo $p['licence']; ?>')">
-                                        Détails
-                                    </button>
+                                    <div class="player-name">
+                                        <span class="text-uppercase"><?php echo htmlspecialchars($p['nom']); ?></span>
+                                        <i class="fas fa-sync-alt refresh-icon" onclick="syncPlayer('<?php echo $p['licence']; ?>')"></i>
+                                    </div>
+                                    <div style="color: rgba(255,255,255,0.7); font-size: 0.85rem;"><?php echo htmlspecialchars($p['prenom']); ?></div>
+                                    <div class="player-licence"><?php echo $p['licence']; ?></div>
                                 </div>
                             </div>
                         </td>
-                        <td class="col-stat val-official pc-only-cell" data-label="OFFICIEL"><?php echo number_format($p['points_officiel'], 1, '.', ''); ?></td>
-                        <td class="col-stat" data-label="PH1"><?php echo number_format($pointsPh1, 1, '.', ''); ?></td>
-                        <td class="col-stat" data-label="PH2"><?php echo number_format($pointsPh2, 1, '.', ''); ?></td>
-                        <td class="col-stat val-monthly" data-label="MENSUEL">
-                            <div class="d-flex align-items-center justify-content-center gap-1">
-                                <span class="main-val"><?php echo number_format($safeMensuel, 1, '.', ''); ?></span>
-                                <?php if ($progMensuelOfficiel != 0): ?>
-                                    <span class="prog-val prog-badge <?php echo $progMensuelOfficiel > 0 ? 'plus' : 'minus'; ?>">
-                                        <?php echo ($progMensuelOfficiel > 0 ? '+' : '') . number_format($progMensuelOfficiel, 1, '.', ''); ?>
-                                    </span>
-                                <?php endif; ?>
-                            </div>
+                        <td class="text-center val-official"><?php echo number_format($p['points_officiel'], 1, '.', ''); ?></td>
+                        <td class="text-center"><?php echo number_format($pointsPh1, 1, '.', ''); ?></td>
+                        <td class="text-center"><?php echo number_format($pointsPh2, 1, '.', ''); ?></td>
+                        <td class="text-center val-monthly">
+                            <span class="main-val"><?php echo number_format($safeMensuel, 1, '.', ''); ?></span>
+                            <?php if ($safeMensuel - $p['points_officiel'] != 0): ?>
+                            <small class="prog-val <?php echo ($safeMensuel - $p['points_officiel']) > 0 ? 'plus' : 'minus'; ?>">
+                                <?php echo ($safeMensuel - $p['points_officiel']) > 0 ? '+' : ''; ?><?php echo number_format($safeMensuel - $p['points_officiel'], 1, '.', ''); ?>
+                            </small>
+                            <?php endif; ?>
                         </td>
-                        <td class="col-stat col-virtuel-big" data-label="VIRTUEL">
-                                    <div class="d-flex align-items-center justify-content-center gap-1">
-                                        <span class="main-val"><?php echo number_format($pointsVirtuel, 1, '.', ''); ?></span>
-                                        <?php if ($progVirtuelPh2 != 0): ?>
-                                            <span class="prog-val prog-badge <?php echo $progVirtuelPh2 > 0 ? 'plus' : 'minus'; ?>">
-                                        <?php echo ($progVirtuelPh2 > 0 ? '+' : '') . number_format($progVirtuelPh2, 1, '.', ''); ?>
-                                    </span>
-                                <?php endif; ?>
-                            </div>
+                        <td class="text-center col-virtuel-big">
+                            <span class="main-val"><?php echo number_format($pointsVirtuel, 1, '.', ''); ?></span>
                         </td>
-                        <td class="col-stat prog-highlight stat-center-bold <?php echo $progMois > 0 ? 'plus' : ($progMois < 0 ? 'minus' : ''); ?>" data-label="MOIS">
+                        <td class="text-center prog-highlight <?php echo $progMois > 0 ? 'plus' : ($progMois < 0 ? 'minus' : ''); ?>">
                             <?php echo ($progMois > 0 ? '+' : '') . number_format($progMois, 1, '.', ''); ?>
                         </td>
-                        <td class="col-stat prog-highlight stat-center-bold <?php echo $progAnnee > 0 ? 'plus' : ($progAnnee < 0 ? 'minus' : ''); ?>" data-label="ANNÉE">
+                        <td class="text-center prog-highlight <?php echo $progAnnee > 0 ? 'plus' : ($progAnnee < 0 ? 'minus' : ''); ?>">
                             <?php echo ($progAnnee > 0 ? '+' : '') . number_format($progAnnee, 1, '.', ''); ?>
                         </td>
                     </tr>
@@ -240,24 +164,13 @@ $clubName = $club['nom'] ?? 'Club ' . $clubId;
                         <td colspan="9">
                             <div class="details-content">
                                 <div class="details-header">
-                                    <h3>Historique & Matchs</h3>
-                                    <div class="details-actions">
-                                        <button class="btn-close-details" onclick="toggleDetails('<?php echo $p['licence']; ?>')">
-                                            <i class="fas fa-times"></i> Fermer
-                                        </button>
-                                    </div>
+                                    <h3>HISTORIQUE & MATCHS</h3>
+                                    <button class="btn-close-details" onclick="toggleDetails('<?php echo $p['licence']; ?>')">FERMER</button>
                                 </div>
-
-                                <div class="chart-container mb-4">
+                                <div class="chart-container">
                                     <canvas id="chart-<?php echo $p['licence']; ?>"></canvas>
                                 </div>
-
-                                <div class="matches-section mt-4">
-                                    <h6 class="text-light text-uppercase small fw-bold mb-3" style="opacity: 0.6;">Derniers matchs</h6>
-                                    <div class="matches-container">
-                                        <div class="text-center p-3 text-muted">Chargement des matchs...</div>
-                                    </div>
-                                </div>
+                                <div class="matches-container mt-4"></div>
                             </div>
                         </td>
                     </tr>
@@ -266,8 +179,8 @@ $clubName = $club['nom'] ?? 'Club ' . $clubId;
             </table>
         </div>
     </div>
-
-    <script src="assets/js/dashboard.js"></script>
+    <!-- Éléments masqués pour le fonctionnement JS -->
     <input type="file" id="avatarInput" style="display: none;" accept="image/*">
+    <script src="assets/js/dashboard.js"></script>
 </body>
 </html>

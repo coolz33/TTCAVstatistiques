@@ -1,0 +1,96 @@
+#ttcav-app {
+    --bg-dark: #1a202c;
+    --bg-card: #2d3748;
+    --text-main: #ffffff;
+    --text-muted: #a0aec0;
+    --accent-yellow: #ecc94b;
+    --border-color: #4a5568;
+    background-color: var(--bg-dark) !important;
+    color: var(--text-main) !important;
+    font-family: 'Inter', sans-serif;
+    padding: 20px;
+    border-radius: 12px;
+}
+
+/* FORCER LA BARRE D'OUTILS SUR UNE LIGNE (IMAGE 2) */
+#ttcav-app .toolbar-pro {
+    display: flex !important;
+    align-items: center !important;
+    gap: 15px !important;
+    background: var(--bg-card) !important;
+    padding: 10px 20px !important;
+    border-radius: 12px !important;
+    margin-bottom: 20px !important;
+    flex-wrap: nowrap !important;
+}
+
+#ttcav-app .search-wrapper-pro {
+    flex-grow: 1 !important;
+    position: relative !important;
+}
+
+#ttcav-app .search-wrapper-pro input {
+    width: 100% !important;
+    background: #1e2533 !important;
+    border: 1px solid var(--border-color) !important;
+    color: white !important;
+    padding: 8px 15px 8px 40px !important;
+    border-radius: 8px !important;
+}
+
+#ttcav-app .search-wrapper-pro i {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+}
+
+/* FIX TABLEAU ET ALIGNEMENT */
+#ttcav-app .players-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+}
+
+#ttcav-app .player-row td {
+    padding: 12px !important;
+    vertical-align: middle !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    background: transparent !important;
+}
+
+#ttcav-app .avatar-pro {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+    background: #111 !important;
+}
+
+/* FIX MATCH CARDS (LES SETS) */
+#ttcav-app .sets-container {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 4px !important;
+}
+
+#ttcav-app .set-box {
+    width: 20px !important;
+    height: 32px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    background: #111 !important;
+    border-radius: 3px !important;
+    font-size: 10px !important;
+}
+
+#ttcav-app .set-top, #ttcav-app .set-bottom {
+    flex: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-weight: bold !important;
+}
+
+#ttcav-app .set-top { color: #fff; border-bottom: 1px solid #333; }
+#ttcav-app .set-bottom { color: #aaa; }

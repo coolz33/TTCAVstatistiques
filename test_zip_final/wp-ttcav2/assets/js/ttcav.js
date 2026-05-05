@@ -3,50 +3,67 @@ let charts = {};
 let currentSort = JSON.parse(localStorage.getItem('ttcav_sort')) || { column: 6, direction: 'desc' };
 
 document.addEventListener('DOMContentLoaded', function() {
+    initTheme();
     initTableEvents();
     initSearch();
     initSyncAll();
     initAvatarUpload();
     initAvatarSizeSelector();
-    initThemeToggle();
     initAvatarHoverPreview();
-    restoreState(); // Restaurer l'état au chargement
+    initMobileSort();
     
-    // Détecter le clic sur la ligne (sauf si on clique sur une icône d'action)
-    const table = document.querySelector('.players-table');
-    if (table) {
-        table.addEventListener('click', function(e) {
+    // Restauration de l'état (Tri + Recherche + Détails)
+    restoreState();
+    
+    // Si premier lancement sans historique, tri par défaut
+    if (!localStorage.getItem('ttcav_sort') && !localStorage.getItem('ttcav_state')) {
+        sortTable(6, 'desc');
+    }
+    
+    const tbody = document.querySelector('.players-table tbody');
+    if (tbody) {
+        tbody.addEventListener('click', function(e) {
             const row = e.target.closest('.player-row');
-            const isIcon = e.target.closest('.refresh-icon') || e.target.closest('.player-avatar');
+            const isAction = e.target.closest('.refresh-icon') || e.target.closest('.player-avatar');
             
-            if (row && !isIcon) {
+            if (row && !isAction) {
                 toggleDetails(row.dataset.licence);
             }
         });
     }
+    // Attacher les deux boutons toggle (aucun onclick dans le HTML)
+    document.querySelectorAll('#themeToggleBtn, #themeToggleBtnMobile').forEach(btn => {
+        if (btn) btn.addEventListener('click', toggleTheme);
+    });
 });
 
-function syncPlayer(licence) {
-    const icon = document.querySelector(`tr[data-licence="${licence}"] .refresh-icon`);
-    if (icon) icon.classList.add('fa-spin');
-    
-    fetch('ajax.php?action=syncPlayer&licence=' + licence)
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                location.reload(); // Recharger pour voir les nouveaux points
-            } else {
-                alert('Erreur : ' + data.error);
-                if (icon) icon.classList.remove('fa-spin');
-            }
-        })
-        .catch(err => {
-            console.error(err);
-            if (icon) icon.classList.remove('fa-spin');
-        });
+/* ===== GESTION DU THÈME ===== */
+function initTheme() {
+    const saved = localStorage.getItem('ttcav_theme') || 'dark';
+    applyTheme(saved);
+}
+
+function toggleTheme() {
+    const body = document.body;
+    const isDark = body.classList.contains('dark-theme');
+    applyTheme(isDark ? 'light' : 'dark');
+    localStorage.setItem('ttcav_theme', isDark ? 'light' : 'dark');
+}
+
+function applyTheme(theme) {
+    const body = document.body;
+    body.classList.remove('dark-theme', 'light-theme');
+    body.classList.add(theme + '-theme');
+
+    const title = theme === 'light' ? 'Passer en thème sombre' : 'Passer en thème clair';
+    ['themeToggleBtn', 'themeToggleBtnMobile'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.title = title;
+    });
 }
 
 function saveState() {
+    if (window._isRestoring) return;
     const searchInput = document.getElementById('playerSearch');
     const expanded = Array.from(document.querySelectorAll('.details-row:not(.hidden-row)'))
                           .map(row => row.id.replace('details-', ''));
@@ -63,10 +80,12 @@ function saveState() {
 function restoreState() {
     const saved = JSON.parse(localStorage.getItem('ttcav_state'));
     if (!saved) {
-        // Appliquer au moins le tri par défaut
         sortTable(currentSort.column, currentSort.direction);
         return;
     }
+
+    // Bloquer les saveState automatiques pendant la restauration
+    window._isRestoring = true;
 
     // 1. Restaurer le tri
     currentSort = saved.sort;
@@ -76,7 +95,9 @@ function restoreState() {
     const searchInput = document.getElementById('playerSearch');
     if (searchInput && saved.search) {
         searchInput.value = saved.search;
-        searchInput.dispatchEvent(new Event('input'));
+        // Déclencher le filtrage manuellement
+        const event = new Event('input', { bubbles: true });
+        searchInput.dispatchEvent(event);
     }
 
     // 3. Restaurer la taille des avatars
@@ -90,6 +111,8 @@ function restoreState() {
             toggleDetails(licence, true);
         });
     }
+
+    window._isRestoring = false;
 }
 
 function initTableEvents() {
@@ -106,27 +129,33 @@ function initTableEvents() {
 
 function initSearch() {
     const searchInput = document.getElementById('playerSearch');
-    const clearBtn = document.getElementById('searchClear');
+    const clearBtn = document.getElementById('clearSearch');
     if (!searchInput) return;
 
     searchInput.addEventListener('input', function() {
         const term = this.value.toLowerCase();
-        if (clearBtn) {
-            clearBtn.classList.toggle('hidden', !term);
-        }
+        if (clearBtn) clearBtn.style.display = term ? 'block' : 'none';
         
         const playerRows = document.querySelectorAll('.player-row');
         const playerCountSpan = document.getElementById('playerCount');
         let visibleCount = 0;
 
         playerRows.forEach(row => {
-            const name = row.querySelector('.player-name').textContent.toLowerCase();
-            const licence = row.querySelector('.player-licence').textContent.toLowerCase();
+            const nom = row.querySelector('.player-nom') ? row.querySelector('.player-nom').textContent.toLowerCase() : '';
+            const prenom = row.querySelector('.player-prenom') ? row.querySelector('.player-prenom').textContent.toLowerCase() : '';
+            const licence = row.querySelector('.player-licence') ? row.querySelector('.player-licence').textContent.toLowerCase() : '';
             const detailsRow = document.getElementById('details-' + row.dataset.licence);
 
-            if (name.includes(term) || licence.includes(term)) {
+            if (nom.includes(term) || prenom.includes(term) || licence.includes(term)) {
                 row.classList.remove('hidden');
-                row.cells[0].innerHTML = `<span class="rank-number">${++visibleCount}</span>`;
+                visibleCount++;
+                
+                // Mettre à jour le rang dans les DEUX emplacements (PC et Mobile)
+                const pcRank = row.querySelector('.col-rank .rank-number');
+                if (pcRank) pcRank.textContent = visibleCount;
+                
+                const mobileRank = row.querySelector('.mobile-rank-wrapper .rank-number');
+                if (mobileRank) mobileRank.textContent = visibleCount;
             } else {
                 row.classList.add('hidden');
                 if (detailsRow) detailsRow.classList.add('hidden-row');
@@ -162,6 +191,12 @@ function sortTable(columnIndex, forceDir = null) {
     }
     
     currentSort = { column: columnIndex, direction: direction };
+
+    // Synchroniser les sélecteurs mobiles
+    const colSel = document.getElementById('mobileSortCol');
+    const dirSel = document.getElementById('mobileSortDir');
+    if (colSel) colSel.value = columnIndex;
+    if (dirSel) dirSel.value = direction;
 
     rows.sort((a, b) => {
         const cellA = a.cells[columnIndex];
@@ -211,7 +246,12 @@ function sortTable(columnIndex, forceDir = null) {
             } else {
                 displayRank = count;
             }
-            row.cells[0].innerHTML = `<span class="rank-number">${displayRank}</span>`;
+            // Mettre à jour le rang dans les DEUX emplacements (PC et Mobile)
+            const pcRank = row.querySelector('.col-rank .rank-number');
+            if (pcRank) pcRank.textContent = displayRank;
+            
+            const mobileRank = row.querySelector('.mobile-rank-wrapper .rank-number');
+            if (mobileRank) mobileRank.textContent = displayRank;
         }
     });
 
@@ -223,10 +263,7 @@ function sortTable(columnIndex, forceDir = null) {
 }
 
 function initSyncAll() {
-    const btnSyncAll = document.getElementById('btnSyncAll') || document.getElementById('btnSyncAllPC');
-    if (!btnSyncAll) return;
-
-    btnSyncAll.addEventListener('click', async function() {
+    const syncHandler = async function() {
         if (!confirm('Synchroniser tout le club ?')) return;
         
         const rows = Array.from(document.querySelectorAll('.player-row'));
@@ -235,7 +272,7 @@ function initSyncAll() {
         const progressText = document.getElementById('syncProgressText');
         
         container.classList.remove('hidden');
-        btnSyncAll.disabled = true;
+        document.querySelectorAll('#btnSyncAllPC, #btnSyncAllMobile').forEach(b => b.disabled = true);
         
         let completed = 0;
         const batchSize = 5;
@@ -244,7 +281,7 @@ function initSyncAll() {
             await Promise.all(batch.map(async (row) => {
                 const lic = row.dataset.licence;
                 try {
-                    await fetch(`ajax.php?action=fullSync&licence=${lic}`);
+                    await fetch(`${ttcav.ajax_url}?action=ttcav_full_sync&_ajax_nonce=${ttcav.nonce}&licence=${lic}`);
                 } catch (e) {}
                 completed++;
                 const p = (completed / rows.length) * 100;
@@ -254,23 +291,31 @@ function initSyncAll() {
         }
         
         location.reload();
+    };
+
+    // Attacher à PC et Mobile
+    document.querySelectorAll('#btnSyncAllPC, #btnSyncAllMobile').forEach(btn => {
+        if (btn) btn.addEventListener('click', syncHandler);
     });
 }
 
 function toggleDetails(licence, forceOpen = false) {
     const detailRow = document.getElementById('details-' + licence);
+    const playerRow = document.querySelector(`.player-row[data-licence="${licence}"]`);
     if (!detailRow) return;
     
     const isHidden = detailRow.classList.contains('hidden-row');
     
     if (forceOpen || isHidden) {
         detailRow.classList.remove('hidden-row');
+        if (playerRow) playerRow.classList.add('expanded');
         loadChart(licence);
         loadMatches(licence);
     } else {
         detailRow.classList.add('hidden-row');
+        if (playerRow) playerRow.classList.remove('expanded');
     }
-    saveState(); // Sauvegarder après ouverture/fermeture
+    saveState(); // Sauvegarder l'état (volets ouverts)
 }
 
 function loadChart(licence) {
@@ -278,7 +323,8 @@ function loadChart(licence) {
     if (!canvas || charts[licence]) return;
     const ctx = canvas.getContext('2d');
 
-    fetch(`ajax.php?action=getHistory&licence=${licence}`)
+    const ts = new Date().getTime();
+    fetch(`${ttcav.ajax_url}?action=ttcav_get_history&_ajax_nonce=${ttcav.nonce}&licence=${licence}&t=${ts}`)
         .then(r => r.json())
         .then(data => {
             if (!data || data.error || data.length === 0) {
@@ -456,7 +502,8 @@ function loadMatches(licence) {
     const container = detailRow.querySelector('.matches-container');
     if (!container) return;
 
-    fetch(`ajax.php?action=getMatches&licence=${licence}`)
+    const ts = new Date().getTime();
+    fetch(`${ttcav.ajax_url}?action=ttcav_get_matches&_ajax_nonce=${ttcav.nonce}&licence=${licence}&t=${ts}`)
         .then(r => r.json())
         .then(data => {
             if (!Array.isArray(data) || data.length === 0) {
@@ -464,7 +511,26 @@ function loadMatches(licence) {
                 return;
             }
 
-            let html = '<div class="matches-list">';
+            const today = new Date();
+            const isBefore11 = today.getDate() <= 10;
+            const currentMonthStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0');
+            
+            let hasProvisionalMatch = false;
+            if (isBefore11) {
+                hasProvisionalMatch = data.some(m => {
+                    const day = m.date_match ? parseInt(m.date_match.substring(8, 10)) : 0;
+                    return m.date_match && m.date_match.startsWith(currentMonthStr) && day >= 1 && day <= 10;
+                });
+            }
+
+            let html = '';
+            if (hasProvisionalMatch) {
+                html += `<div class="alert text-center p-2 mb-3" style="font-size: 0.85rem; border-radius: 6px; background: rgba(255, 193, 7, 0.1); border: 1px solid rgba(255, 193, 7, 0.3); color: #ffc107;">
+                            <i class="fas fa-info-circle me-1"></i> Le badge <strong>Provisoire</strong> indique que les points sont calculés avec le classement du mois précédent jusqu'au rafraîchissement des points mensuels le 11 du mois.
+                         </div>`;
+            }
+
+            html += '<div class="matches-list">';
             let currentGroup = '';
             
             const getEpreuveName = (code) => {
@@ -490,6 +556,12 @@ function loadMatches(licence) {
                 const map = { '1': '1.0', 'I': '1.5', 'F': '1.0', 'P': '1.0', 'J': '0.5', 'C': '0.5', '#': '0.5' };
                 return map[code] || '0.5';
             };
+            const formatPts = (n) => {
+                const val = Number(n);
+                if (Number.isInteger(val)) return val.toString();
+                return val.toFixed(3).replace(/\.?0+$/, "");
+            };
+
             // Pré-calcul des totaux par groupe
             const groupStats = {};
             let liveCount = 0;
@@ -523,14 +595,6 @@ function loadMatches(licence) {
                 if (currentValidationState !== isLive) {
                     currentValidationState = isLive;
                     if (isLive) {
-                        const isProvisionalDay = (new Date().getDate() <= 10);
-                        if (isProvisionalDay) {
-                            html += `
-                            <div style="background: rgba(236, 201, 75, 0.1); border: 1px solid rgba(236, 201, 75, 0.3); color: #ecc94b; padding: 12px 15px; border-radius: 8px; margin-bottom: 15px; font-size: 0.85rem; line-height: 1.4;">
-                                <i class="fas fa-info-circle me-1"></i>
-                                <b>Note sur les points :</b> Durant la période du 01 au 10 du mois, vos points virtuels incluent les matchs du mois dernier car le classement officiel n'est pas encore publié. Ils seront recalculés automatiquement sur la base du nouveau classement FFTT dès sa parution (le 10 du mois).
-                            </div>`;
-                        }
                         html += `<div class="validation-separator live">Matchs non validés (${liveCount})</div>`;
                     } else {
                         html += `<div class="validation-separator validated">Matchs validés (${validatedCount})</div>`;
@@ -541,12 +605,12 @@ function loadMatches(licence) {
                 if (groupKey !== currentGroup) {
                     currentGroup = groupKey;
                     const stats = groupStats[groupKey];
-                    const wonStr = `<span style="color: var(--plus-color); font-weight: bold;">+${stats.won.toFixed(1)}</span>`;
-                    const lostStr = `<span style="color: var(--minus-color); font-weight: bold;">${stats.lost.toFixed(1)}</span>`;
+                    const wonStr = `<span style="color: var(--plus-color); font-weight: bold;">+${formatPts(stats.won)}</span>`;
+                    const lostStr = `<span style="color: var(--minus-color); font-weight: bold;">${formatPts(stats.lost)}</span>`;
                     const totalVal = stats.total;
                     const totalColor = totalVal > 0 ? 'var(--plus-color)' : (totalVal < 0 ? 'var(--minus-color)' : '#9E9E9E');
                     const totalSign = totalVal > 0 ? '+' : '';
-                    const totalStr = `<span style="color: ${totalColor}; font-weight: bold;">${totalSign}${totalVal.toFixed(1)}</span>`;
+                    const totalStr = `<span style="color: ${totalColor}; font-weight: bold;">${totalSign}${formatPts(totalVal)}</span>`;
                     
                     html += `<div class="match-date-group">
                                 <div>
@@ -562,18 +626,23 @@ function loadMatches(licence) {
                 const isWin = m.victoire_defaite === 'V';
                 const statusClass = isWin ? 'win' : 'loss';
                 const pts = (m.points_resultat !== 0 && m.points_resultat !== null) ? m.points_resultat : m.points_calcules;
-                const ptsLabel = (pts > 0 ? '+' : '') + Number(pts).toFixed(1);
+                const ptsLabel = (pts > 0 ? '+' : '') + formatPts(pts);
                 
                 let liveBadge = '';
                 if (isLive) {
-                    const matchDate = new Date(m.date_match);
-                    const matchDay = matchDate.getDate();
-                    const isMatchProvisional = (matchDay >= 1 && matchDay <= 10);
-                    
-                    if (isMatchProvisional) {
-                        liveBadge = `<span class="badge-virtual" style="background: #ed8936; margin-right: 5px;">PROVISOIRE</span>`;
-                    }
-                    liveBadge += `<span class="badge-virtual">VIRTUEL</span>`;
+                    liveBadge = `<span class="badge-virtual">VIRTUEL</span>`;
+                }
+
+                const today = new Date();
+                const isBefore11 = today.getDate() <= 10;
+                const currentMonthStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0');
+                const isCurrentMonth = m.date_match && m.date_match.startsWith(currentMonthStr);
+                const day = m.date_match ? parseInt(m.date_match.substring(8, 10)) : 0;
+                const isProvisional = isBefore11 && isCurrentMonth && day >= 1 && day <= 10;
+                
+                let provBadge = '';
+                if (isProvisional) {
+                    provBadge = `<span class="badge bg-warning text-dark mx-1" title="Points provisoires basés sur le mois précédent. Ajustement le 11." style="font-size:0.65rem; padding: 2px 4px; border-radius: 4px;"><i class="fas fa-exclamation-triangle"></i> Provisoire</span>`;
                 }
 
                 let setsHtml = '';
@@ -603,12 +672,15 @@ function loadMatches(licence) {
                         <div class="match-opponent d-flex justify-content-between align-items-center">
                             <div>
                                 <span class="text-warning small me-1">${Number(m.adversaire_points).toFixed(1)}</span>
-                                ${liveBadge}${m.adversaire_nom}
+                                ${liveBadge}${provBadge}${m.adversaire_nom}
                             </div>
                             <div class="d-flex align-items-center gap-2">
                                 ${setsHtml}
                                 <span class="match-result-badge ${isWin ? 'bg-success' : 'bg-danger'}">${isWin ? 'Victoire' : 'Défaite'}</span>
                             </div>
+                        </div>
+                        <div class="match-meta d-flex gap-2 mt-1">
+                             <span class="small text-muted"><i class="fas fa-hashtag me-1"></i>Match n°${m.idpartie || 'N/A'}</span>
                         </div>
                     </div>
                 </div>`;
@@ -627,11 +699,11 @@ function formatDate(dateStr) {
 }
 
 function syncSinglePlayer(licence) {
-    const icon = event.target.closest('.refresh-icon');
+    const icon = event.target.closest('.refresh-icon-mini');
     if (icon) icon.classList.add('fa-spin');
     
     // On lance la synchro complète (Profil + Officiel + Live + Virtuel)
-    fetch(`ajax.php?action=syncPlayer&licence=${licence}`)
+    fetch(`${ttcav.ajax_url}?action=ttcav_sync_player&_ajax_nonce=${ttcav.nonce}&licence=${licence}`)
         .then(r => r.json())
         .then(data => {
             if (data.error) throw new Error(data.error);
@@ -662,7 +734,7 @@ function initAvatarUpload() {
         const originalHtml = avatarDiv.innerHTML;
         avatarDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
-        fetch('ajax.php?action=uploadAvatar', {
+        fetch('${ttcav.ajax_url}?action=ttcav_upload_avatar&_ajax_nonce=${ttcav.nonce}', {
             method: 'POST',
             body: formData
         })
@@ -671,7 +743,7 @@ function initAvatarUpload() {
             if (data.success) {
                 avatarDiv.setAttribute('oncontextmenu', `event.preventDefault(); event.stopPropagation(); const img = this.querySelector('img'); if(img) triggerAvatarRecenter(img, '${currentUploadLicence}')`);
                 avatarDiv.innerHTML = `<div class="avatar-crop-container">
-                                        <img src="assets/avatars/${data.avatar}" class="avatar-img" style="width: 100%; left: 0%; top: 0%;">
+                                        <img src="https://ttcav2.coolz.fr/assets/avatars/${data.avatar}" class="avatar-img" style="width: 100%; left: 0%; top: 0%;">
                                       </div>
                                       <div class="recenter-hint"><i class="fas fa-arrows-alt"></i> Clic droit pour recentrer</div>`;
             } else {
@@ -692,17 +764,29 @@ function triggerAvatarUpload(licence) {
 }
 
 function initAvatarSizeSelector() {
-    const container = document.getElementById('avatarSizeSelectorPC');
-    if (!container) return;
-
-    container.addEventListener('click', (e) => {
-        const btn = e.target.closest('[data-size]');
-        if (!btn) return;
-
-        const size = btn.dataset.size;
-        setAvatarSize(size);
-        saveState();
+    // Attacher aux deux conteneurs : PC et Mobile
+    ['avatarSizeSelectorPC', 'avatarSizeSelectorMobile'].forEach(id => {
+        const container = document.getElementById(id);
+        if (!container) return;
+        container.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-size]');
+            if (!btn) return;
+            setAvatarSize(btn.dataset.size);
+            saveState();
+        });
     });
+}
+
+function showAvatarBig(el) {
+    const avatar = el.closest('.player-avatar');
+    const img = avatar.querySelector('.avatar-img');
+    if (!img) return;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'avatar-big-overlay';
+    overlay.innerHTML = `<img src="${img.src}" class="avatar-big-img">`;
+    overlay.onclick = () => overlay.remove();
+    document.body.appendChild(overlay);
 }
 
 function setAvatarSize(size) {
@@ -712,17 +796,35 @@ function setAvatarSize(size) {
         av.classList.add('avatar-' + size);
     });
 
-    // Update active button
-    const container = document.getElementById('avatarSizeSelectorPC');
-    if (container) {
+    // Update active button (PC + Mobile)
+    ['avatarSizeSelectorPC', 'avatarSizeSelectorMobile'].forEach(id => {
+        const container = document.getElementById(id);
+        if (!container) return;
         container.querySelectorAll('.btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.size === size);
             btn.classList.toggle('btn-secondary', btn.dataset.size === size);
             btn.classList.toggle('btn-outline-secondary', btn.dataset.size !== size);
         });
-    }
+    });
     
     localStorage.setItem('ttcav_avatar_size', size);
+}
+
+function initMobileSort() {
+    const colSel = document.getElementById('mobileSortCol');
+    const dirSel = document.getElementById('mobileSortDir');
+    if (!colSel || !dirSel) return;
+
+    const apply = () => {
+        const col = parseInt(colSel.value);
+        const dir = dirSel.value;
+        currentSort = { column: col, direction: dir };
+        localStorage.setItem('ttcav_sort', JSON.stringify(currentSort));
+        sortTable(col, dir);
+    };
+
+    colSel.addEventListener('change', apply);
+    dirSel.addEventListener('change', apply);
 }
 
 function initAvatarHoverPreview() {
@@ -887,7 +989,7 @@ function triggerAvatarRecenter(img, licence) {
             formData.append('zoom', zoom.toFixed(3));
             formData.append('x', leftPct.toFixed(2));
             formData.append('y', topPct.toFixed(2));
-            fetch('ajax.php?action=updateAvatarPos', { method: 'POST', body: formData });
+            fetch('${ttcav.ajax_url}?action=ttcav_update_avatar_pos&_ajax_nonce=${ttcav.nonce}', { method: 'POST', body: formData });
 
             document.body.removeChild(overlay);
             window.removeEventListener('mousemove', moveHandler);
@@ -902,29 +1004,4 @@ function triggerAvatarRecenter(img, licence) {
             }
         };
     };
-}
-function initThemeToggle() {
-    const btn = document.getElementById('themeToggleBtn');
-    if (!btn) return;
-
-    // Load saved theme
-    const savedTheme = localStorage.getItem('ttcav_theme') || 'dark';
-    document.body.classList.toggle('light-theme', savedTheme === 'light');
-    updateThemeIcon(savedTheme);
-
-    btn.addEventListener('click', () => {
-        const isLight = document.body.classList.toggle('light-theme');
-        const theme = isLight ? 'light' : 'dark';
-        localStorage.setItem('ttcav_theme', theme);
-        updateThemeIcon(theme);
-    });
-}
-
-function updateThemeIcon(theme) {
-    const btn = document.getElementById('themeToggleBtn');
-    if (!btn) return;
-    const icon = btn.querySelector('i');
-    if (icon) {
-        icon.className = theme === 'light' ? 'fas fa-sun' : 'fas fa-moon';
-    }
 }
