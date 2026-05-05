@@ -63,8 +63,8 @@ function saveState() {
 function restoreState() {
     const saved = JSON.parse(localStorage.getItem('ttcav_state'));
     if (!saved) {
-        // Appliquer au moins le tri par défaut
-        sortTable(currentSort.column, currentSort.direction);
+        // Appliquer au moins le tri par défaut (VIRTUEL desc)
+        sortTable(6, 'desc');
         return;
     }
 

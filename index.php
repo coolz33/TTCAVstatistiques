@@ -152,6 +152,11 @@ $isProvisionalPeriod = ($day >= 1 && $day <= 10);
                         </td>
                         <td class="text-center col-virtuel-big">
                             <span class="main-val"><?php echo number_format($pointsVirtuel, 1, '.', ''); ?></span>
+                            <?php if ($pointsVirtuel - $p['points_officiel'] != 0): ?>
+                            <small class="prog-val <?php echo ($pointsVirtuel - $p['points_officiel']) > 0 ? 'plus' : 'minus'; ?>" style="font-size: 0.7rem; font-weight: 700; margin-left: 4px;">
+                                <?php echo ($pointsVirtuel - $p['points_officiel']) > 0 ? '+' : ''; ?><?php echo number_format($pointsVirtuel - $p['points_officiel'], 1, '.', ''); ?>
+                            </small>
+                            <?php endif; ?>
                         </td>
                         <td class="text-center prog-highlight <?php echo $progMois > 0 ? 'plus' : ($progMois < 0 ? 'minus' : ''); ?>">
                             <?php echo ($progMois > 0 ? '+' : '') . number_format($progMois, 1, '.', ''); ?>

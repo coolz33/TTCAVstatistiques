@@ -42,13 +42,17 @@ body.light-theme tr.player-row {
     color: var(--text-main) !important;
 }
 
-body.light-theme .player-row:hover {
-    background-color: #f1f5f9 !important;
+body.light-theme .players-table.table-dark tbody tr.player-row:hover td,
+body.light-theme .player-row:hover,
+body.light-theme .player-row:hover td {
+    background-color: #f8fafc !important;
+    color: var(--text-main) !important;
+    box-shadow: none !important;
 }
 
 body.light-theme .player-row td {
     background-color: transparent !important;
-    color: var(--text-main) !important;
+    color: var(--text-main); /* Removed !important to allow specialized classes to work */
 }
 
 body.light-theme .form-control {
@@ -119,6 +123,17 @@ body.light-theme .search-wrapper-pro i {
 
 body.light-theme .details-row {
     background-color: #f8fafc !important;
+}
+
+body.light-theme .btn-close-details {
+    background: rgba(0, 0, 0, 0.05) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    color: var(--text-main) !important;
+}
+
+body.light-theme .btn-close-details:hover {
+    background: var(--text-main) !important;
+    color: #ffffff !important;
 }
 
 * {
@@ -233,7 +248,7 @@ body {
 
 .players-table th i {
     font-size: 0.7rem;
-    margin-right: 5px;
+    margin-left: 8px; /* Move icon to the right of text */
 }
 
 .player-row {
@@ -251,7 +266,7 @@ body {
 }
 
 .player-row td {
-    padding: 15px 20px;
+    padding: 12px 10px; /* Reduced padding */
 }
 
 .player-info {
@@ -278,7 +293,7 @@ body {
 }
 
 .players-table td {
-    padding: 12px 20px;
+    padding: 12px 10px; /* Reduced padding */
     vertical-align: middle;
 }
 
@@ -359,6 +374,7 @@ body {
 .player-name-wrapper {
     display: flex;
     flex-direction: column;
+    flex-grow: 1; /* Take space */
 }
 
 .player-name {
@@ -395,6 +411,7 @@ body {
 .col-stat {
     font-weight: 600;
     text-align: center;
+    white-space: nowrap !important;
 }
 
 .col-virtuel {
@@ -403,6 +420,7 @@ body {
 
 .col-virtuel-big {
     color: var(--accent-yellow) !important;
+    white-space: nowrap !important;
     font-weight: 700;
     font-size: 1.1rem;
     text-align: center;
@@ -424,8 +442,9 @@ body {
     text-align: center;
 }
 
-.val-monthly .main-val {
-    color: var(--accent-yellow);
+.val-monthly .main-val,
+.col-virtuel-big .main-val {
+    color: var(--accent-yellow) !important;
     display: inline-block;
 }
 
@@ -437,11 +456,11 @@ body {
 }
 
 .prog-val.plus {
-    color: var(--plus-color);
+    color: var(--plus-color) !important;
 }
 
 .prog-val.minus {
-    color: var(--minus-color);
+    color: var(--minus-color) !important;
 }
 
 .prog-highlight {
@@ -449,11 +468,11 @@ body {
 }
 
 .prog-highlight.plus {
-    color: var(--plus-color);
+    color: var(--plus-color) !important;
 }
 
 .prog-highlight.minus {
-    color: var(--minus-color);
+    color: var(--minus-color) !important;
 }
 
 .stat-center-bold {
