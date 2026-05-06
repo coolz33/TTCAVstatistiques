@@ -890,6 +890,12 @@ function initAvatarSizeSelector() {
 }
 
 function setAvatarSize(size) {
+    const table = document.querySelector('.players-table');
+    if (table) {
+        table.classList.remove('table-size-sm', 'table-size-md', 'table-size-lg');
+        table.classList.add('table-size-' + size);
+    }
+
     const avatars = document.querySelectorAll('.player-avatar');
     avatars.forEach(av => {
         av.classList.remove('avatar-sm', 'avatar-md', 'avatar-lg');

@@ -418,8 +418,27 @@ body {
 }
 
 .players-table td {
-    padding: 12px 10px; /* Reduced padding */
+    padding: 12px 10px;
     vertical-align: middle;
+    transition: padding 0.2s ease;
+}
+
+.players-table.table-size-sm td { padding: 8px 10px !important; }
+.players-table.table-size-md td { padding: 12px 10px !important; }
+.players-table.table-size-lg td { padding: 20px 10px !important; }
+
+/* Hide license on small size */
+.players-table.table-size-sm .player-licence {
+    display: none;
+}
+
+.player-name, .player-prenom {
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.player-name:hover, .player-prenom:hover {
+    color: var(--accent-yellow);
 }
 
 .avatar-crop-container {

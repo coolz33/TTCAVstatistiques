@@ -125,13 +125,13 @@ $isProvisionalPeriod = ($day >= 1 && $day <= 10);
                     <tr>
                         <th class="text-center">#</th>
                         <th class="col-player">JOUEUR <i class="fas fa-sort"></i></th>
-                        <th class="text-center col-stat">OFFICIEL <i class="fas fa-sort-down"></i></th>
-                        <th class="text-center col-stat">PH. 1 <i class="fas fa-sort"></i></th>
-                        <th class="text-center col-stat">PH. 2 <i class="fas fa-sort"></i></th>
-                        <th class="text-center col-stat">MENSUEL <i class="fas fa-sort"></i></th>
-                        <th class="text-center col-stat">VIRTUEL <i class="fas fa-sort"></i></th>
-                        <th class="text-center col-stat">MOIS <i class="fas fa-sort"></i></th>
-                        <th class="text-center col-stat">ANNÉE <i class="fas fa-sort"></i></th>
+                        <th class="text-start col-stat">OFFICIEL <i class="fas fa-sort-down"></i></th>
+                        <th class="text-start col-stat">PH. 1 <i class="fas fa-sort"></i></th>
+                        <th class="text-start col-stat">PH. 2 <i class="fas fa-sort"></i></th>
+                        <th class="text-start col-stat">MENSUEL <i class="fas fa-sort"></i></th>
+                        <th class="text-start col-stat">VIRTUEL <i class="fas fa-sort"></i></th>
+                        <th class="text-start col-stat">MOIS <i class="fas fa-sort"></i></th>
+                        <th class="text-start col-stat">ANNÉE <i class="fas fa-sort"></i></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -167,11 +167,11 @@ $isProvisionalPeriod = ($day >= 1 && $day <= 10);
                                     <?php endif; ?>
                                 </div>
                                 <div class="player-name-wrapper">
-                                    <div class="player-name">
+                                    <div class="player-name" onclick="event.stopPropagation(); copyToClipboard('<?php echo $p['licence']; ?>', this)" title="Cliquer pour copier la licence">
                                         <span class="text-uppercase"><?php echo htmlspecialchars($p['nom']); ?></span>
-                                        <i class="fas fa-sync-alt refresh-icon" onclick="syncPlayer('<?php echo $p['licence']; ?>')"></i>
+                                        <i class="fas fa-sync-alt refresh-icon" onclick="event.stopPropagation(); syncPlayer('<?php echo $p['licence']; ?>')"></i>
                                     </div>
-                                    <div class="player-prenom"><?php echo htmlspecialchars($p['prenom']); ?></div>
+                                    <div class="player-prenom" onclick="event.stopPropagation(); copyToClipboard('<?php echo $p['licence']; ?>', this)" title="Cliquer pour copier la licence"><?php echo htmlspecialchars($p['prenom']); ?></div>
                                     <div class="player-licence" onclick="event.stopPropagation(); copyToClipboard('<?php echo $p['licence']; ?>', this)" title="Cliquer pour copier la licence">
                                         <?php echo $p['licence']; ?>
                                     </div>
@@ -232,10 +232,10 @@ $isProvisionalPeriod = ($day >= 1 && $day <= 10);
                                 </div>
                             </div>
                         </td>
-                        <td class="text-center val-official d-none d-md-table-cell"><?php echo number_format($p['points_officiel'], 1, '.', ''); ?></td>
-                        <td class="text-center d-none d-md-table-cell"><?php echo number_format($pointsPh1, 1, '.', ''); ?></td>
-                        <td class="text-center d-none d-md-table-cell"><?php echo number_format($pointsPh2, 1, '.', ''); ?></td>
-                        <td class="text-center val-monthly d-none d-md-table-cell">
+                        <td class="text-start val-official d-none d-md-table-cell"><?php echo number_format($p['points_officiel'], 1, '.', ''); ?></td>
+                        <td class="text-start d-none d-md-table-cell"><?php echo number_format($pointsPh1, 1, '.', ''); ?></td>
+                        <td class="text-start d-none d-md-table-cell"><?php echo number_format($pointsPh2, 1, '.', ''); ?></td>
+                        <td class="text-start val-monthly d-none d-md-table-cell">
                             <span class="main-val"><?php echo number_format($safeMensuel, 1, '.', ''); ?></span>
                             <?php if ($safeMensuel - $p['points_officiel'] != 0): ?>
                             <small class="prog-val <?php echo ($safeMensuel - $p['points_officiel']) > 0 ? 'plus' : 'minus'; ?>">
@@ -243,7 +243,7 @@ $isProvisionalPeriod = ($day >= 1 && $day <= 10);
                             </small>
                             <?php endif; ?>
                         </td>
-                        <td class="text-center col-virtuel-big d-none d-md-table-cell">
+                        <td class="text-start col-virtuel-big d-none d-md-table-cell">
                             <span class="main-val"><?php echo number_format($pointsVirtuel, 1, '.', ''); ?></span>
                             <?php if ($pointsVirtuel - $p['points_officiel'] != 0): ?>
                             <small class="prog-val <?php echo ($pointsVirtuel - $p['points_officiel']) > 0 ? 'plus' : 'minus'; ?>" style="font-size: 0.7rem; font-weight: 700; margin-left: 4px;">
@@ -251,10 +251,10 @@ $isProvisionalPeriod = ($day >= 1 && $day <= 10);
                             </small>
                             <?php endif; ?>
                         </td>
-                        <td class="text-center prog-highlight <?php echo $progMois > 0 ? 'plus' : ($progMois < 0 ? 'minus' : ''); ?> d-none d-md-table-cell">
+                        <td class="text-start prog-highlight <?php echo $progMois > 0 ? 'plus' : ($progMois < 0 ? 'minus' : ''); ?> d-none d-md-table-cell">
                             <?php echo ($progMois > 0 ? '+' : '') . number_format($progMois, 1, '.', ''); ?>
                         </td>
-                        <td class="text-center prog-highlight <?php echo $progAnnee > 0 ? 'plus' : ($progAnnee < 0 ? 'minus' : ''); ?> d-none d-md-table-cell">
+                        <td class="text-start prog-highlight <?php echo $progAnnee > 0 ? 'plus' : ($progAnnee < 0 ? 'minus' : ''); ?> d-none d-md-table-cell">
                             <?php echo ($progAnnee > 0 ? '+' : '') . number_format($progAnnee, 1, '.', ''); ?>
                         </td>
                     </tr>
