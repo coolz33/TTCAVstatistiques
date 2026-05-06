@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (table) {
         table.addEventListener('click', function(e) {
             const row = e.target.closest('.player-row');
-            const isIcon = e.target.closest('.refresh-icon') || e.target.closest('.player-avatar') || e.target.closest('.btn-mobile-details');
+            const isIcon = e.target.closest('.refresh-icon') || e.target.closest('.player-avatar') || e.target.closest('.btn-row-details') || e.target.closest('.player-licence') || e.target.closest('.player-name') || e.target.closest('.player-prenom');
             
             if (row && !isIcon) {
                 toggleDetails(row.dataset.licence);
@@ -333,18 +333,43 @@ function initSyncAll() {
 
 function toggleDetails(licence, forceOpen = false) {
     const detailRow = document.getElementById('details-' + licence);
+    const mainRow = document.querySelector(`.player-row[data-licence="${licence}"]`);
     if (!detailRow) return;
     
     const isHidden = detailRow.classList.contains('hidden-row');
     
     if (forceOpen || isHidden) {
+        // ACCORDION: Fermer les autres volets ouverts
+        document.querySelectorAll('.player-row[aria-expanded="true"]').forEach(row => {
+            const otherLic = row.dataset.licence;
+            if (otherLic !== licence) {
+                const otherDetail = document.getElementById('details-' + otherLic);
+                row.setAttribute('aria-expanded', 'false');
+                setTimeout(() => {
+                    if (otherDetail && row.getAttribute('aria-expanded') === 'false') {
+                        otherDetail.classList.add('hidden-row');
+                    }
+                }, 400);
+            }
+        });
+
         detailRow.classList.remove('hidden-row');
+        // Petit délai pour laisser le temps au navigateur de rendre la ligne avant d'animer
+        setTimeout(() => {
+            if (mainRow) mainRow.setAttribute('aria-expanded', 'true');
+        }, 10);
         loadChart(licence);
         loadMatches(licence);
     } else {
-        detailRow.classList.add('hidden-row');
+        if (mainRow) mainRow.setAttribute('aria-expanded', 'false');
+        // Attendre la fin de l'animation CSS (0.4s) avant de masquer la ligne
+        setTimeout(() => {
+            if (mainRow && mainRow.getAttribute('aria-expanded') === 'false') {
+                detailRow.classList.add('hidden-row');
+            }
+        }, 400);
     }
-    saveState(); // Sauvegarder après ouverture/fermeture
+    saveState();
 }
 
 function loadChart(licence) {

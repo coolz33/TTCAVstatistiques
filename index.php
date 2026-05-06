@@ -176,8 +176,8 @@ $isProvisionalPeriod = ($day >= 1 && $day <= 10);
                                         <?php echo $p['licence']; ?>
                                     </div>
                                 </div>
-                                <!-- BOUTON DÉTAILS MOBILE -->
-                                <button class="btn-mobile-details d-md-none" onclick="toggleDetails('<?php echo $p['licence']; ?>')">
+                                <!-- BOUTON DÉTAILS -->
+                                <button class="btn-row-details" onclick="event.stopPropagation(); toggleDetails('<?php echo $p['licence']; ?>')">
                                     <i class="fas fa-chevron-right"></i>
                                 </button>
                             </div>
@@ -259,16 +259,18 @@ $isProvisionalPeriod = ($day >= 1 && $day <= 10);
                         </td>
                     </tr>
                     <tr class="details-row hidden-row" id="details-<?php echo $p['licence']; ?>">
-                        <td colspan="9">
-                            <div class="details-content">
-                                <div class="details-header">
-                                    <h3>HISTORIQUE & MATCHS</h3>
-                                    <button class="btn-close-details" onclick="toggleDetails('<?php echo $p['licence']; ?>')">FERMER</button>
+                        <td colspan="9" class="p-0">
+                            <div class="details-wrapper">
+                                <div class="details-content">
+                                    <div class="details-header">
+                                        <h3>HISTORIQUE & MATCHS</h3>
+                                        <button class="btn-close-details" onclick="toggleDetails('<?php echo $p['licence']; ?>')">FERMER</button>
+                                    </div>
+                                    <div class="chart-container">
+                                        <canvas id="chart-<?php echo $p['licence']; ?>"></canvas>
+                                    </div>
+                                    <div class="matches-container mt-4"></div>
                                 </div>
-                                <div class="chart-container">
-                                    <canvas id="chart-<?php echo $p['licence']; ?>"></canvas>
-                                </div>
-                                <div class="matches-container mt-4"></div>
                             </div>
                         </td>
                     </tr>
